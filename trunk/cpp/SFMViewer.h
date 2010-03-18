@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "GLWidget.h"
+#include "GLCanvas.h"
 
 QT_BEGIN_NAMESPACE
 class QSlider;
 QT_END_NAMESPACE
-class GLWidget;
+class GLCanvas;
 
 namespace sfmviewer {
 
@@ -31,7 +31,7 @@ namespace sfmviewer {
 			void keyPressEvent(QKeyEvent *event);
 
 		private:
-			GLWidget *glWidget;
+			GLCanvas *glWidget;
 	};
 
 } // namespace sfmviewer

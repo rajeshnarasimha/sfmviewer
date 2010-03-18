@@ -1,5 +1,5 @@
 /*
- * GLWidget.h
+ * GLCanvas.h
  *
  *   Created on: Mar 18, 2010
  *       Author: nikai
@@ -12,7 +12,7 @@
 #include <QtOpenGL>
 
 
-#include "GLWidget.h"
+#include "GLCanvas.h"
 #include "bunny.h"
 #include "trackball.h"
 
@@ -39,7 +39,7 @@ const GLfloat m_convert[16] = {
 using namespace std;
 
 /* ************************************************************************* */
-GLWidget::GLWidget(QWidget *parent)
+GLCanvas::GLCanvas(QWidget *parent)
 : QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
 	qtGreen = QColor::fromCmykF(0.40, 0.0, 1.0, 0.0);
@@ -57,30 +57,30 @@ GLWidget::GLWidget(QWidget *parent)
 }
 
 /* ************************************************************************* */
-GLWidget::~GLWidget()
+GLCanvas::~GLCanvas()
 {
 }
 
 /* ************************************************************************* */
-QSize GLWidget::minimumSizeHint() const
+QSize GLCanvas::minimumSizeHint() const
 {
 	return QSize(50, 50);
 }
 
 /* ************************************************************************* */
-QSize GLWidget::sizeHint() const {
+QSize GLCanvas::sizeHint() const {
 	return QSize(hintWidth_, hintHeight_);
 }
 
 /* ************************************************************************* */
-void GLWidget::setSizeHint(int w, int h) {
+void GLCanvas::setSizeHint(int w, int h) {
 	hintWidth_ = w;
 	hintHeight_ = h;
 	updateGeometry();
 }
 
 /* ************************************************************************* */
-void GLWidget::initializeGL()
+void GLCanvas::initializeGL()
 {
 	/* remove back faces */
 	glDisable(GL_CULL_FACE);
@@ -99,7 +99,7 @@ void GLWidget::initializeGL()
 }
 
 /* ************************************************************************* */
-void GLWidget::paintGL()
+void GLCanvas::paintGL()
 {
 	glClearColor(SFM_BACKGROUND_COLOR);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,9 +119,8 @@ void GLWidget::paintGL()
 }
 
 /* ************************************************************************* */
-void GLWidget::resizeGL(int width, int height)
+void GLCanvas::resizeGL(int width, int height)
 {
-	cout << "resizeGL" << endl;
   glViewport(0, 0, (GLint)width, (GLint)height);
   glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -131,13 +130,13 @@ void GLWidget::resizeGL(int width, int height)
 }
 
 /* ************************************************************************* */
-void GLWidget::mousePressEvent(QMouseEvent *event)
+void GLCanvas::mousePressEvent(QMouseEvent *event)
 {
 	lastPos_ = event->pos();
 }
 
 /* ************************************************************************* */
-void GLWidget::mouseMoveEvent(QMouseEvent *event)
+void GLCanvas::mouseMoveEvent(QMouseEvent *event)
 {
 	float m_shift_step =  0.01f;
 
@@ -174,7 +173,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 }
 
 /* ************************************************************************* */
-void GLWidget::DrawStructure()
+void GLCanvas::DrawStructure()
 {
 	if (!structure_.empty())
 	{
@@ -186,4 +185,4 @@ void GLWidget::DrawStructure()
 	}
 }
 
-#include "GLWidget.moc"
+#include "GLCanvas.moc"

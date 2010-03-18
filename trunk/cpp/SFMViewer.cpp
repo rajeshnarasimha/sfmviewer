@@ -19,7 +19,7 @@ namespace sfmviewer {
 	SFMViewer::SFMViewer(const string& title, QWidget *parent) :
 			QWidget(parent)
 	{
-			glWidget = new GLWidget;
+			glWidget = new GLCanvas;
 
 			QHBoxLayout *mainLayout = new QHBoxLayout;
 			mainLayout->addWidget(glWidget);
