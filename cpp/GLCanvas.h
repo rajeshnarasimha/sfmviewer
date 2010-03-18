@@ -1,5 +1,5 @@
 /*
- * GLWidget.h
+ * GLCanvas.h
  *
  *   Created on: Mar 18, 2010
  *       Author: nikai
@@ -12,13 +12,13 @@
 
 class QtLogo;
 
-class GLWidget : public QGLWidget
+class GLCanvas : public QGLWidget
 {
     Q_OBJECT
 
 public:
-    GLWidget(QWidget *parent = 0);
-    ~GLWidget();
+    GLCanvas(QWidget *parent = 0);
+    ~GLCanvas();
 
     // return the minimal size of the window
     QSize minimumSizeHint() const;
