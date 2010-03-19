@@ -8,21 +8,15 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 #include <math.h>
 #include <QtGui>
 #include <QtOpenGL>
-#include <boost/foreach.hpp>
 
 #include "GLCanvas.h"
-#include "bunny.h"
 #include "trackball.h"
 
-#define SFM_POINT_COLOR          1.0f, 1.0f, 1.0f, 1.0f
 #define SFM_BACKGROUND_COLOR     0.0f, 0.0f, 0.0f, 1.0f
-#define SFM_CAMERA_COLOR  240.f/255.f, 140.0f/255.f, 24.0f/255.f,  1.0f
-
-#define DRAWONERECT(X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4) glColor4f(SFM_CAMERA_COLOR); glEnable(GL_BLEND); glBlendFunc(/*GL_ONE_MINUS*/GL_SRC_COLOR,GL_DST_COLOR/*GL_ONE_MINUS_DST_COLOR*/); glBegin(GL_POLYGON);\
-	glVertex3f(X1,Y1,Z1); glVertex3f(X2,Y2,Z2); glVertex3f(X3,Y3,Z3); glVertex3f(X4,Y4,Z4); glEnd(); glDisable(GL_BLEND);
 
 using namespace std;
 
@@ -50,6 +44,8 @@ namespace sfmviewer {
 		viewPort_.m_shift[1]    =  0.0f;
 		viewPort_.m_shift[2]    =  -5.0f;
 		trackball(viewPort_.m_quat, 0.0f, 0.0f, 0.0f, 0.0f);
+
+		createActions();
 	}
 
 	/* ************************************************************************* */
@@ -73,20 +69,6 @@ namespace sfmviewer {
 		hintWidth_ = w;
 		hintHeight_ = h;
 		updateGeometry();
-	}
-
-	/* ************************************************************************* */
-	void GLCanvas::drawBunny() {
-		vector<Vertex> structure;
-		Vertex v;
-		for(int i=0;i<bunny_nr_vertex;i++)
-		{
-			v.X = (GLfloat)bunny_vertices[i][0];
-			v.Y = -(GLfloat)bunny_vertices[i][1];
-			v.Z = (GLfloat)bunny_vertices[i][2];
-			structure.push_back(v);
-		}
-		drawStructure(structure);
 	}
 
 	/* ************************************************************************* */
@@ -169,106 +151,54 @@ namespace sfmviewer {
 			float dx = event->x()-lastPos_.x();
 			float dy = lastPos_.y()-event->y();
 			if(fabs(dy)>fabs(dx))
-				viewPort_.m_shift[2] += (dy/fabs(dy))*m_shift_step*10;
+				viewPort_.m_shift[2] += (dy/fabs(dy))*m_shift_step*100;
 		}
 		lastPos_ = event->pos();
 		updateGL();
 
-//		cout << viewPort_.m_shift[0] << ", " << viewPort_.m_shift[1] << ", " << viewPort_.m_shift[2] << ", "
-//         << viewPort_.m_quat[0] << ", " << viewPort_.m_quat[1] << ", " << viewPort_.m_quat[2] << ", " << viewPort_.m_quat[3] << endl;
-//		cout.flush();
+		if (parentWidget()) {
+			stringstream portMsg;
+			portMsg << viewPort_.m_shift[0] << ", " << viewPort_.m_shift[1] << ", " << viewPort_.m_shift[2] << ", "
+					    << viewPort_.m_quat[0] << ", " << viewPort_.m_quat[1] << ", " << viewPort_.m_quat[2] << ", " << viewPort_.m_quat[3] << endl;
+			// TODO: check whether the parent is actually a QMainWindow
+			((QMainWindow*)parentWidget())->statusBar()->showMessage(QString::fromStdString(portMsg.str()));
+		}
 	}
 
 	/* ************************************************************************* */
-	void drawStructure(const vector<Vertex>& structure, const vector<VertexColor>& pointColors) {
+	void GLCanvas::mouseReleaseEvent(QMouseEvent *event) {
 
-		if (!structure.empty())
-		{
-			// set default color
-			glColor4f(SFM_POINT_COLOR);
-
-			// set points to draw
-			glEnableClientState( GL_VERTEX_ARRAY);
-			glVertexPointer(3, GL_FLOAT, 0, (GLvoid*) &structure[0]);
-
-			// set colors if available
-			if (!pointColors.empty()) {
-				if (pointColors.size() != structure.size())
-					throw runtime_error("DrawStructure: no. of colors != no. of points");
-				glEnableClientState(GL_COLOR_ARRAY);
-				glColorPointer(3,GL_UNSIGNED_BYTE, 0, (GLvoid*)&pointColors[0]);
+		// pop up the context menu
+		if (event->buttons() & Qt::RightButton) {
+			float dist_x = event->x() - lastPos_.x();
+			float dist_y = event->y() - lastPos_.y();
+			cout << dist_x << " " << dist_y << endl;
+			if (dist_x < 3 && dist_y < 3) {
+				QMenu menu(this);
+				cout << "contextMenuEvent" << endl;
+				menu.addAction(changeMouseSpeedAct);
+				menu.exec(event->globalPos());
 			}
-
-			// draw the points
-			glDrawArrays(GL_POINTS, 0, structure.size());
-			glDisableClientState(GL_VERTEX_ARRAY);
 		}
 	}
 
 	/* ************************************************************************* */
-	inline void DrawOneLine(GLfloat X1, GLfloat Y1, GLfloat Z1,
-			GLfloat X2, GLfloat Y2, GLfloat Z2,
-			float r, float g, float b, float alpha, GLfloat linewidth = 1)
-	{
-	    glColor4f(r,g,b,alpha);
-	    glLineWidth(linewidth);
-	    glBegin(GL_LINES);
-	    glVertex3f(X1,Y1,Z1);
-	    glVertex3f(X2,Y2,Z2);
-	    glEnd();
+	void GLCanvas::createActions() {
+		changeMouseSpeedAct = new QAction(tr("&Mouse speed"), this);
+		changeMouseSpeedAct->setStatusTip(tr("Change the speed of the mouse operations"));
+		connect(changeMouseSpeedAct, SIGNAL(triggered()), this, SLOT(changeMouseSpeed()));
 	}
 
 	/* ************************************************************************* */
-	void drawCamera(const Vertex* pv, const float r, const float g, const float b, const float alpha, const GLfloat linewidth, bool fill) {
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[1].X,pv[1].Y,pv[1].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[2].X,pv[2].Y,pv[2].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[3].X,pv[3].Y,pv[3].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[4].X,pv[4].Y,pv[4].Z, r, g, b, alpha, linewidth);
-
-    DrawOneLine(pv[1].X,pv[1].Y,pv[1].Z, pv[2].X,pv[2].Y,pv[2].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[2].X,pv[2].Y,pv[2].Z, pv[3].X,pv[3].Y,pv[3].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[3].X,pv[3].Y,pv[3].Z, pv[4].X,pv[4].Y,pv[4].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[4].X,pv[4].Y,pv[4].Z, pv[1].X,pv[1].Y,pv[1].Z, r, g, b, alpha, linewidth);
-
-    if (fill) {
-        DRAWONERECT(pv[1].X, pv[1].Y, pv[1].Z, pv[2].X, pv[2].Y, pv[2].Z,
-                    pv[3].X, pv[3].Y, pv[3].Z, pv[4].X, pv[4].Y, pv[4].Z);
-    }
+	void GLCanvas::changeMouseSpeed() {
 	}
 
 	/* ************************************************************************* */
-	void drawCameras(const vector<CameraVertices>& cameras) {
-
-		const float r = 240.f/255.f, g = 140.0f/255.f,  b = 24.0f/255.f, alpha = 1.f;
-		GLfloat linewidth = 1;
-		BOOST_FOREACH(const CameraVertices& camera, cameras)
-			drawCamera(camera.v, r, g, b, alpha, linewidth, true);
-	}
-
-	/* ************************************************************************* */
-	CameraVertices calcCameraVertices(const gtsam::SimpleCamera& camera, const int img_w, const int img_h)
-	{
-		CameraVertices cam_vertices;
-
-		// the first point is the optical center
-		cam_vertices.v[0].X = camera.pose().x();
-		cam_vertices.v[0].Y = camera.pose().y();
-		cam_vertices.v[0].Z = camera.pose().z();
-
-		// generate four vertex corners
-		vector<gtsam::Point2> corners;
-		corners.push_back(gtsam::Point2(0.f,img_h-1));
-		corners.push_back(gtsam::Point2(img_w-1,img_h-1));
-		corners.push_back(gtsam::Point2(img_w-1,0.f));
-		corners.push_back(gtsam::Point2(0.f,0.f));
-		for(int j=1; j<=4; j++) {
-			gtsam::Point3 tmp = camera.backproject(corners[j-1], 1.);
-			cam_vertices.v[j].X = tmp.x();
-			cam_vertices.v[j].Y = tmp.y();
-			cam_vertices.v[j].Z = tmp.z();
-		}
-
-		return cam_vertices;
+	void GLCanvas::contextMenuEvent(QContextMenuEvent *event) {
+//		QMenu menu(this);
+//		cout << "contextMenuEvent" << endl;
+//		menu.addAction(changeMouseSpeedAct);
+//		menu.exec(event->globalPos());
 	}
 
 #include "GLCanvas.moc"
