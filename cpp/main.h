@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "SFMViewer.h"
+#include "render.h"
 
 namespace sfmviewer {
 	// the pointer of main window

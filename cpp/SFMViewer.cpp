@@ -16,16 +16,24 @@ using namespace std;
 namespace sfmviewer {
 
 	/* ************************************************************************* */
-	SFMViewer::SFMViewer(const string& title, QWidget *parent) :
-			QWidget(parent)
+	SFMViewer::SFMViewer(const std::string& title, QMainWindow *parent) :
+					QMainWindow(parent)
 	{
-			glWidget = new GLCanvas;
+		// set window title
+		setWindowTitle(QString::fromStdString(title));
 
-			QHBoxLayout *mainLayout = new QHBoxLayout;
-			mainLayout->addWidget(glWidget);
-			setLayout(mainLayout);
+		// set up menus
+		QMenu *helpMenu = new QMenu(tr("Help"), this);
+		menuBar()->addMenu(helpMenu);
+		helpMenu->addAction(tr("About"), this, SLOT(about()));
 
-			setWindowTitle(QString::fromStdString(title));
+		// enable status bar
+		statusBar();
+
+		// create opengl canvas
+		glWidget = new GLCanvas(this);
+		setCentralWidget(glWidget);
+
 	}
 
 	/* ************************************************************************* */
@@ -35,17 +43,27 @@ namespace sfmviewer {
 
 	/* ************************************************************************* */
 	void SFMViewer::setSize(int width, int height) {
-//		setSizeHint(width,height);
+		//		setSizeHint(width,height);
 		glWidget->setSizeHint(width, height);
 	}
 
 	/* ************************************************************************* */
 	void SFMViewer::keyPressEvent(QKeyEvent *e)
 	{
-			if (e->key() == Qt::Key_Escape)
-					close();
-			else
-					QWidget::keyPressEvent(e);
+		if (e->key() == Qt::Key_Escape)
+			close();
+		else
+			QWidget::keyPressEvent(e);
 	}
+
+
+	/* ************************************************************************* */
+	void SFMViewer::about() {
+		QMessageBox::about(this, tr("About"), tr("SFMViewer by Kai Ni\n\n"
+				"nikai97@gmail.com"));
+
+	}
+
+#include "SFMViewer.moc"
 
 } // namespace sfmviewer
