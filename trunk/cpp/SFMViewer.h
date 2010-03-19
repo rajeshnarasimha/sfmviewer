@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <gtsam/Point3.h>
 #include "GLCanvas.h"
 
 QT_BEGIN_NAMESPACE
@@ -27,7 +28,14 @@ namespace sfmviewer {
 			// set the window size
 			void setSize(int width, int height);
 
+			// set callback function for the opengl canvas
+			void setCallback (const GLCanvas::Callback& fun_draw) { glWidget->setCallback(fun_draw); }
+
+			// return the canvas pointer
+			GLCanvas* canvas() { return glWidget; }
+
 		protected:
+
 			void keyPressEvent(QKeyEvent *event);
 
 		private:

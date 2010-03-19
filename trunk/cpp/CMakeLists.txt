@@ -10,7 +10,6 @@ add_definitions(-DNDEBUG -O2 -Wall)
 # Use packages
 gt_use_boost()
 gt_use_gtsam()
-
 gt_use_qt4(QtOpenGL)
     
 gt_main_lib("*.cpp")

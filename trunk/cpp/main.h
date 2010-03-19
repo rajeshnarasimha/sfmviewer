@@ -18,16 +18,26 @@
 #include "SFMViewer.h"
 
 namespace sfmviewer {
+	// the pointer of main window
 	SFMViewer *window;
+
+	// the width of the window
 	int width = 1024;
+
+	// the height of the window
 	int height = 768;
+
+	// the setup function called by users
+	void setup(SFMViewer& window);
+
+	// the user's draw function
+	void draw (GLCanvas& canvas);
 }
 
 using namespace sfmviewer;
 
 int main(int argc, char *argv[])
 {
-
 #ifdef __APPLE__
   ProcessSerialNumber PSN;
   GetCurrentProcess(&PSN);
@@ -35,9 +45,11 @@ int main(int argc, char *argv[])
   SetFrontProcess(&PSN);
 #endif
 
-  QApplication app(argc, argv);
-  window = new sfmviewer::SFMViewer("SFMViewer");
+	QApplication app(argc, argv);
+  window = new SFMViewer("SFMViewer");
   window->setSize(width, height);
+  window->setCallback(draw);
+  setup(*window);
   window->show();
   return app.exec();
 }
