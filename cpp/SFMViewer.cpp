@@ -10,6 +10,7 @@
 #include <QtGui>
 
 #include "SFMViewer.h"
+#include "configdialog.h"
 
 using namespace std;
 
@@ -26,6 +27,7 @@ namespace sfmviewer {
 		QMenu *helpMenu = new QMenu(tr("Help"), this);
 		menuBar()->addMenu(helpMenu);
 		helpMenu->addAction(tr("About"), this, SLOT(about()));
+		helpMenu->addAction(tr("preferences"), this, SLOT(config()));
 
 		// enable status bar
 		statusBar();
@@ -56,14 +58,18 @@ namespace sfmviewer {
 			QWidget::keyPressEvent(e);
 	}
 
-
 	/* ************************************************************************* */
 	void SFMViewer::about() {
 		QMessageBox::about(this, tr("About"), tr("SFMViewer by Kai Ni\n\n"
 				"nikai97@gmail.com"));
-
 	}
 
+	/* ************************************************************************* */
+	void SFMViewer::config() {
+		ConfigDialog dlg;
+		dlg.exec();
+		cout << "mouse speed: " << dlg.getMouseSpeed() << endl;
+	}
 #include "SFMViewer.moc"
 
 } // namespace sfmviewer
