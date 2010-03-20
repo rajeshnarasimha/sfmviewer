@@ -42,6 +42,9 @@ namespace sfmviewer {
 		// show the about dialog
 		void about();
 
+		// show the config dialog
+		void config();
+
 	protected:
 
 		// repsond the key press events

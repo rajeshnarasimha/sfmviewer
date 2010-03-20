@@ -166,23 +166,6 @@ namespace sfmviewer {
 	}
 
 	/* ************************************************************************* */
-	void GLCanvas::mouseReleaseEvent(QMouseEvent *event) {
-
-		// pop up the context menu
-		if (event->buttons() & Qt::RightButton) {
-			float dist_x = event->x() - lastPos_.x();
-			float dist_y = event->y() - lastPos_.y();
-			cout << dist_x << " " << dist_y << endl;
-			if (dist_x < 3 && dist_y < 3) {
-				QMenu menu(this);
-				cout << "contextMenuEvent" << endl;
-				menu.addAction(changeMouseSpeedAct);
-				menu.exec(event->globalPos());
-			}
-		}
-	}
-
-	/* ************************************************************************* */
 	void GLCanvas::createActions() {
 		changeMouseSpeedAct = new QAction(tr("&Mouse speed"), this);
 		changeMouseSpeedAct->setStatusTip(tr("Change the speed of the mouse operations"));
@@ -191,14 +174,29 @@ namespace sfmviewer {
 
 	/* ************************************************************************* */
 	void GLCanvas::changeMouseSpeed() {
+		// create a dialog
+		QDialog dlg(this);
+		dlg.setModal(true);
+		QPushButton *ok = new QPushButton( "OK", &dlg);
+		ok->setGeometry( 10,10, 100,30 );
+		connect( ok, SIGNAL(clicked()), SLOT(accept()) );
+		QPushButton *cancel = new QPushButton( "Cancel", &dlg);
+		cancel->setGeometry( 10,60, 100,30 );
+		connect( cancel, SIGNAL(clicked()), SLOT(reject()) );
+
+		if (dlg.exec()) {
+			cout << "kai1" << endl;
+		}
 	}
 
 	/* ************************************************************************* */
 	void GLCanvas::contextMenuEvent(QContextMenuEvent *event) {
-//		QMenu menu(this);
-//		cout << "contextMenuEvent" << endl;
-//		menu.addAction(changeMouseSpeedAct);
-//		menu.exec(event->globalPos());
+		if (event->modifiers() & Qt::MetaModifier) { // it requires control click
+			QMenu menu(this);
+			cout << "contextMenuEvent" << endl;
+			menu.addAction(changeMouseSpeedAct);
+			menu.exec(event->globalPos());
+		}
 	}
 
 #include "GLCanvas.moc"

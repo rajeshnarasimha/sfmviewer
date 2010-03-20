@@ -70,9 +70,6 @@ namespace sfmviewer {
 		// mouse click and drag
 		void mouseMoveEvent(QMouseEvent *event);
 
-		// record the last mouse position
-		void mouseReleaseEvent(QMouseEvent *event);
-
 		// create actions for events
 		void createActions();
 
