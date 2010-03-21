@@ -25,14 +25,14 @@ namespace sfmviewer {
 		}
 	};
 
+	// callback function types
+	typedef boost::function<void ()> Callback;
+
 	class GLCanvas : public QGLWidget
 	{
 		Q_OBJECT
 
 	public:
-
-		// callback function types
-		typedef boost::function<void (GLCanvas&)> Callback;
 
 		// constructor
 		GLCanvas(QWidget *parent = 0);
@@ -50,9 +50,13 @@ namespace sfmviewer {
 		void setSizeHint(int w, int h);
 
 		// set up users' callback functions
-		void setCallback(const Callback& fun_draw) { fun_draw_ = fun_draw; }
+		void setDrawFunc(const Callback& fun_draw) { fun_draw_ = fun_draw; }
 
+		// set the viewport of the opengl camera
 		void setViewPort(const ViewPort& port) { viewPort_ = port; }
+
+		// set the refresh interval
+		void setRefreshInterval(int msec);
 
 	protected:
 		// intialize the opengl canvas
@@ -82,6 +86,10 @@ namespace sfmviewer {
 		void changeMouseSpeed();
 
 	private:
+		// the time for refreshing the screen
+		QTimer *timer_;
+
+		// the last position of mouse clicks
 		QPoint lastPos_;
 
 		int hintWidth_;

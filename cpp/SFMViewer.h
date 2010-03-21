@@ -20,7 +20,6 @@ QT_FORWARD_DECLARE_CLASS(QMenu)
 
 namespace sfmviewer {
 
-
 	class SFMViewer : public QMainWindow
 	{
 		Q_OBJECT
@@ -33,10 +32,13 @@ namespace sfmviewer {
 		void setSize(int width, int height);
 
 		// set callback function for the opengl canvas
-		void setCallback (const GLCanvas::Callback& fun_draw) { glWidget->setCallback(fun_draw); }
+		void setDrawFunc (const Callback& fun_draw) { glCanvas->setDrawFunc(fun_draw); }
+
+		// set callback function for the local timer events
+		void setTimerFunc(const Callback& fun_timer) { fun_timer_ = fun_timer; }
 
 		// return the canvas pointer
-		GLCanvas* canvas() { return glWidget; }
+		GLCanvas* canvas() { return glCanvas; }
 
 	private slots:
 		// show the about dialog
@@ -45,13 +47,21 @@ namespace sfmviewer {
 		// show the config dialog
 		void config();
 
+		// repsond to the timer events
+		void timerEvent(QTimerEvent *event);
+
 	protected:
 
 		// repsond the key press events
 		void keyPressEvent(QKeyEvent *event);
 
 	private:
-		GLCanvas *glWidget;
+
+		// the pointer of the opengl canvas
+		GLCanvas *glCanvas;
+
+		// the callback function handle for timer events
+		Callback fun_timer_;
 	};
 
 } // namespace sfmviewer
