@@ -72,11 +72,6 @@ namespace sfmviewer {
 		cout << "mouse speed: " << dlg.getMouseSpeed() << endl;
 	}
 
-	/* ************************************************************************* */
-	void SFMViewer::timerEvent(QTimerEvent *event)
-	{
-		if (fun_timer_) fun_timer_();
-	}
 #include "SFMViewer.moc"
 
 } // namespace sfmviewer

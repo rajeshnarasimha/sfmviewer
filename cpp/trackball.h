@@ -69,7 +69,8 @@ void
 build_rotmatrix(float m[4][4], float q[4]);
 
 // added by Kai: combine translation
-void build_tran_matrix (float m[4][4], float q[4], float x, float y, float z);
+void
+build_tran_matrix (float m[4][4], float q[4], float x, float y, float z);
 
 /*
  * This function computes a quaternion based on an axis (defined by

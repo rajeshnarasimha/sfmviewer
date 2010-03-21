@@ -104,6 +104,7 @@ void loadVisibility() {
 }
 
 /* ************************************************************************* */
+// show the visibility of the next frame
 void advanceFrame() {
 	// change point colors
 	pointColorsNow = pointColors;
@@ -115,11 +116,12 @@ void advanceFrame() {
 	// change camera colors
 	cameraColorsNow = cameraColors;
 	if (step >=0 && step < neighborCameras.size()) {
+		cameraColorsNow[step] = SFMColor(1.0, 0.0, 0.0, 1.0);
 		BOOST_FOREACH(const int& i, neighborCameras.find(step)->second)
 				cameraColorsNow[i].alpha = 1.0;
 	}
 
-	canvas->update();
+	canvas->updateGL();
 
 	// find the next frame that has visibility information
 	while(true) {
@@ -127,6 +129,12 @@ void advanceFrame() {
 		if (visibileFeatures.find(step) != visibileFeatures.end())
 			break;
 	}
+}
+
+/* ************************************************************************* */
+// move the camera around an orbit
+void moveCamera() {
+
 }
 
 /* ************************************************************************* */
@@ -145,8 +153,10 @@ void sfmviewer::setup()
 	// set up the timer for pluging in the visibility data
 	pointColorsNow = pointColors;
 	cameraColorsNow = cameraColors;
-	window->setTimerFunc(advanceFrame);
-	window->startTimer(200);
+	canvas->addTimer(advanceFrame, 200);
+
+	// set up the timer for moving the opengl camera
+	canvas->addTimer(moveCamera, 20);
 }
 
 /* ************************************************************************* */

@@ -58,6 +58,9 @@ namespace sfmviewer {
 		// set the refresh interval
 		void setRefreshInterval(int msec);
 
+		// set callback function for the local timer events
+		int addTimer(const Callback& fun_timer, int msec);
+
 	protected:
 		// intialize the opengl canvas
 		void initializeGL();
@@ -80,13 +83,16 @@ namespace sfmviewer {
 		// context menu event
 		void contextMenuEvent(QContextMenuEvent *event);
 
+		// repsond to the timer events
+		void timerEvent(QTimerEvent *event);
+
 	private slots:
 
 		// change the speed of mouse operations
 		void changeMouseSpeed();
 
 	private:
-		// the time for refreshing the screen
+		// the time for redrawing
 		QTimer *timer_;
 
 		// the last position of mouse clicks
@@ -101,6 +107,10 @@ namespace sfmviewer {
 		// the pointers of callback functions
 		Callback fun_draw_;
 
+		// the action to change mouse speed
 		QAction* changeMouseSpeedAct;
+
+		// timer identifiers and their corresponding callback functions
+		std::map<int, Callback> timer_callbacks_;
 	};
 } // namespace sfmviewer
