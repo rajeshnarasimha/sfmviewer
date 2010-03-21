@@ -19,8 +19,15 @@
 #include "render.h"
 
 namespace sfmviewer {
+
+	// the pointer of the application
+	QApplication *app;
+
 	// the pointer of main window
 	SFMViewer *window;
+
+	// the pointer of opengl canvas
+	GLCanvas *canvas;
 
 	// the width of the window
 	int width = 1024;
@@ -29,10 +36,10 @@ namespace sfmviewer {
 	int height = 768;
 
 	// the setup function called by users
-	void setup(SFMViewer& window);
+	void setup();
 
 	// the user's draw function
-	void draw (GLCanvas& canvas);
+	void draw();
 }
 
 using namespace sfmviewer;
@@ -46,11 +53,15 @@ int main(int argc, char *argv[])
   SetFrontProcess(&PSN);
 #endif
 
-	QApplication app(argc, argv);
+  // create a new window and its opengl canvas
+	app = new QApplication(argc, argv);
   window = new SFMViewer("SFMViewer");
+  canvas = window->canvas();
+
+  // initialize the window
   window->setSize(width, height);
-  window->setCallback(draw);
-  setup(*window);
+  window->setDrawFunc(draw);
+  setup();
   window->show();
-  return app.exec();
+  return app->exec();
 }

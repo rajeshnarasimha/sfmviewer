@@ -33,9 +33,10 @@ namespace sfmviewer {
 		statusBar();
 
 		// create opengl canvas
-		glWidget = new GLCanvas(this);
-		setCentralWidget(glWidget);
+		glCanvas = new GLCanvas(this);
+		setCentralWidget(glCanvas);
 
+		fun_timer_ = NULL;
 	}
 
 	/* ************************************************************************* */
@@ -46,7 +47,7 @@ namespace sfmviewer {
 	/* ************************************************************************* */
 	void SFMViewer::setSize(int width, int height) {
 		//		setSizeHint(width,height);
-		glWidget->setSizeHint(width, height);
+		glCanvas->setSizeHint(width, height);
 	}
 
 	/* ************************************************************************* */
@@ -69,6 +70,12 @@ namespace sfmviewer {
 		ConfigDialog dlg;
 		dlg.exec();
 		cout << "mouse speed: " << dlg.getMouseSpeed() << endl;
+	}
+
+	/* ************************************************************************* */
+	void SFMViewer::timerEvent(QTimerEvent *event)
+	{
+		if (fun_timer_) fun_timer_();
 	}
 #include "SFMViewer.moc"
 

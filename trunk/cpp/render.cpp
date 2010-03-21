@@ -16,18 +16,32 @@ using namespace std;
 #define SFM_POINT_COLOR          1.0f, 1.0f, 1.0f, 1.0f
 #define SFM_CAMERA_COLOR  240.f/255.f, 140.0f/255.f, 24.0f/255.f,  1.0f
 
-#define DRAWONERECT(X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4) glColor4f(SFM_CAMERA_COLOR); glEnable(GL_BLEND); glBlendFunc(/*GL_ONE_MINUS*/GL_SRC_COLOR,GL_DST_COLOR/*GL_ONE_MINUS_DST_COLOR*/); glBegin(GL_POLYGON);\
-	glVertex3f(X1,Y1,Z1); glVertex3f(X2,Y2,Z2); glVertex3f(X3,Y3,Z3); glVertex3f(X4,Y4,Z4); glEnd(); glDisable(GL_BLEND);
+#define DRAWONERECT(X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4) \
+	glColor4f(SFM_CAMERA_COLOR); \
+	glEnable(GL_BLEND); \
+	glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR); \
+	glBegin(GL_POLYGON);\
+	glVertex3f(X1,Y1,Z1); \
+	glVertex3f(X2,Y2,Z2); \
+	glVertex3f(X3,Y3,Z3); \
+	glVertex3f(X4,Y4,Z4); \
+	glEnd(); \
+	glDisable(GL_BLEND);
 
 namespace sfmviewer {
 	/* ************************************************************************* */
-	void drawStructure(const vector<Vertex>& structure, const vector<VertexColor>& pointColors) {
+	void drawStructure(const vector<Vertex>& structure,
+			const vector<SFMColor>& pointColors) {
 
-		if (!structure.empty())
-		{
-			// set default color
-			glColor4f(SFM_POINT_COLOR);
+		// enable blending
+		glEnable( GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		// point rendering setting
+		glEnable( GL_POINT_SMOOTH);
+		glPointSize(2.0);
+
+		if (!structure.empty()) {
 			// set points to draw
 			glEnableClientState( GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, 0, (GLvoid*) &structure[0]);
@@ -36,68 +50,76 @@ namespace sfmviewer {
 			if (!pointColors.empty()) {
 				if (pointColors.size() != structure.size())
 					throw runtime_error("DrawStructure: no. of colors != no. of points");
-				glEnableClientState(GL_COLOR_ARRAY);
-				glColorPointer(3,GL_UNSIGNED_BYTE, 0, (GLvoid*)&pointColors[0]);
-			}
+				glEnableClientState( GL_COLOR_ARRAY);
+				glColorPointer(4, GL_FLOAT, 0, (GLvoid*) &pointColors[0]);
+			} else
+				glColor4f(SFM_POINT_COLOR);
 
 			// draw the points
 			glDrawArrays(GL_POINTS, 0, structure.size());
 			glDisableClientState(GL_VERTEX_ARRAY);
 		}
+
+		glDisable(GL_BLEND);
 	}
 
 	/* ************************************************************************* */
 	void drawBunny() {
 		vector<Vertex> structure;
 		Vertex v;
-		for(int i=0;i<bunny_nr_vertex;i++)
-		{
-			v.X = (GLfloat)bunny_vertices[i][0];
-			v.Y = -(GLfloat)bunny_vertices[i][1];
-			v.Z = (GLfloat)bunny_vertices[i][2];
+		for (int i = 0; i < bunny_nr_vertex; i++) {
+			v.X = (GLfloat) bunny_vertices[i][0];
+			v.Y = -(GLfloat) bunny_vertices[i][1];
+			v.Z = (GLfloat) bunny_vertices[i][2];
 			structure.push_back(v);
 		}
 		drawStructure(structure);
 	}
 
 	/* ************************************************************************* */
-	inline void DrawOneLine(GLfloat X1, GLfloat Y1, GLfloat Z1,
-			GLfloat X2, GLfloat Y2, GLfloat Z2,
-			float r, float g, float b, float alpha, GLfloat linewidth = 1)
-	{
-	    glColor4f(r,g,b,alpha);
-	    glLineWidth(linewidth);
-	    glBegin(GL_LINES);
-	    glVertex3f(X1,Y1,Z1);
-	    glVertex3f(X2,Y2,Z2);
-	    glEnd();
+	inline void drawOneLine(GLfloat X1, GLfloat Y1, GLfloat Z1, GLfloat X2,
+			GLfloat Y2, GLfloat Z2, const SFMColor& color, GLfloat linewidth = 1) {
+		glColor4f(color.r, color.g, color.b, color.alpha);
+		glLineWidth(linewidth);
+		glBegin( GL_LINES);
+		glVertex3f(X1, Y1, Z1);
+		glVertex3f(X2, Y2, Z2);
+		glEnd();
 	}
 
 	/* ************************************************************************* */
-	void drawCamera(const Vertex* pv, const float r, const float g, const float b, const float alpha, const GLfloat linewidth, bool fill) {
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[1].X,pv[1].Y,pv[1].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[2].X,pv[2].Y,pv[2].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[3].X,pv[3].Y,pv[3].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[4].X,pv[4].Y,pv[4].Z, r, g, b, alpha, linewidth);
+	void drawCamera(const Vertex* pv, const SFMColor& color, const GLfloat linewidth, bool fill) {
+		// enable blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    DrawOneLine(pv[1].X,pv[1].Y,pv[1].Z, pv[2].X,pv[2].Y,pv[2].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[2].X,pv[2].Y,pv[2].Z, pv[3].X,pv[3].Y,pv[3].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[3].X,pv[3].Y,pv[3].Z, pv[4].X,pv[4].Y,pv[4].Z, r, g, b, alpha, linewidth);
-    DrawOneLine(pv[4].X,pv[4].Y,pv[4].Z, pv[1].X,pv[1].Y,pv[1].Z, r, g, b, alpha, linewidth);
+    drawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[1].X,pv[1].Y,pv[1].Z, color, linewidth);
+    drawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[2].X,pv[2].Y,pv[2].Z, color, linewidth);
+    drawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[3].X,pv[3].Y,pv[3].Z, color, linewidth);
+    drawOneLine(pv[0].X,pv[0].Y,pv[0].Z, pv[4].X,pv[4].Y,pv[4].Z, color, linewidth);
+
+    drawOneLine(pv[1].X,pv[1].Y,pv[1].Z, pv[2].X,pv[2].Y,pv[2].Z, color, linewidth);
+    drawOneLine(pv[2].X,pv[2].Y,pv[2].Z, pv[3].X,pv[3].Y,pv[3].Z, color, linewidth);
+    drawOneLine(pv[3].X,pv[3].Y,pv[3].Z, pv[4].X,pv[4].Y,pv[4].Z, color, linewidth);
+    drawOneLine(pv[4].X,pv[4].Y,pv[4].Z, pv[1].X,pv[1].Y,pv[1].Z, color, linewidth);
 
     if (fill) {
         DRAWONERECT(pv[1].X, pv[1].Y, pv[1].Z, pv[2].X, pv[2].Y, pv[2].Z,
                     pv[3].X, pv[3].Y, pv[3].Z, pv[4].X, pv[4].Y, pv[4].Z);
     }
+		glDisable(GL_BLEND);
 	}
 
 	/* ************************************************************************* */
-	void drawCameras(const vector<CameraVertices>& cameras) {
+	void drawCameras(const vector<CameraVertices>& cameras, const vector<SFMColor>& cameraColors) {
 
-		const float r = 240.f/255.f, g = 140.0f/255.f, b = 24.0f/255.f, alpha = 1.f;
 		GLfloat linewidth = 1;
-		BOOST_FOREACH(const CameraVertices& camera, cameras)
-			drawCamera(camera.v, r, g, b, alpha, linewidth, true);
+		for (size_t i=0; i<cameras.size(); i++) {
+			if (cameraColors.empty())
+				drawCamera(cameras[i].v, default_camera_color, linewidth, true);
+			else
+				drawCamera(cameras[i].v, cameraColors[i], linewidth, true);
+		}
 	}
 
 	/* ************************************************************************* */
