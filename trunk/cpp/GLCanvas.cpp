@@ -131,10 +131,10 @@ namespace sfmviewer {
 		if (event->buttons() & Qt::LeftButton) {
 			QSize ws = size();
 			float spin_quat[4];
-			trackball(spin_quat, (2.0 * lastPos_.x() - ws.width()) / ws.width(),
-					-(2.0 * lastPos_.y() - ws.height()) / ws.height(), (2.0 * event->x()
-							- ws.width()) / ws.width(), -(2.0 * event->y() - ws.height())
-							/ ws.height());
+			trackball(spin_quat, (2.0 * lastPos_.x() - ws.width())  / ws.width(),
+					                -(2.0 * lastPos_.y() - ws.height()) / ws.height(),
+					                 (2.0 * event->x()   - ws.width())  / ws.width(),
+  				                -(2.0 * event->y()   - ws.height())	/ ws.height());
 			add_quats(spin_quat, viewPort_.m_quat, viewPort_.m_quat);
 		}
 		// right click to translate
@@ -154,12 +154,13 @@ namespace sfmviewer {
 		lastPos_ = event->pos();
 		updateGL();
 
+		// update status bar
 		if (parentWidget()) {
 			stringstream portMsg;
 			portMsg << viewPort_.m_shift[0] << ", " << viewPort_.m_shift[1] << ", "
-					<< viewPort_.m_shift[2] << ", " << viewPort_.m_quat[0] << ", "
-					<< viewPort_.m_quat[1] << ", " << viewPort_.m_quat[2] << ", "
-					<< viewPort_.m_quat[3] << endl;
+							<< viewPort_.m_shift[2] << ", " << viewPort_.m_quat[0] << ", "
+							<< viewPort_.m_quat[1] << ", " << viewPort_.m_quat[2] << ", "
+							<< viewPort_.m_quat[3] << endl;
 			// TODO: check whether the parent is actually a QMainWindow
 			((QMainWindow*) parentWidget())->statusBar()->showMessage(
 					QString::fromStdString(portMsg.str()));
@@ -202,6 +203,21 @@ namespace sfmviewer {
 		}
 	}
 
+	/* ************************************************************************* */
+	int GLCanvas::addTimer(const Callback& fun_timer, int msec) {
+		int identifier = startTimer(msec);
+		timer_callbacks_.insert(make_pair(identifier, fun_timer));
+		return identifier;
+	}
+
+	/* ************************************************************************* */
+	void GLCanvas::timerEvent(QTimerEvent *event)
+	{
+		map<int, Callback>::const_iterator it = timer_callbacks_.find(event->timerId());
+		if (it == timer_callbacks_.end())
+			throw runtime_error("GLCanvas::timerEvent: invalid timer id!");
+		it->second();
+	}
 #include "GLCanvas.moc"
 
 } // namespace sfmviewer

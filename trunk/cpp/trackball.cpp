@@ -323,7 +323,8 @@ build_rotmatrix(float m[4][4], float q[4])
 }
 
 // Kai:: combine both rotation and translation
-void build_tran_matrix (float m[4][4], float q[4], float x, float y, float z)
+void
+build_tran_matrix (float m[4][4], float q[4], float x, float y, float z)
 {
     // build rotation first
     build_rotmatrix(m, q); 

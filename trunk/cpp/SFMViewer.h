@@ -34,9 +34,6 @@ namespace sfmviewer {
 		// set callback function for the opengl canvas
 		void setDrawFunc (const Callback& fun_draw) { glCanvas->setDrawFunc(fun_draw); }
 
-		// set callback function for the local timer events
-		void setTimerFunc(const Callback& fun_timer) { fun_timer_ = fun_timer; }
-
 		// return the canvas pointer
 		GLCanvas* canvas() { return glCanvas; }
 
@@ -46,9 +43,6 @@ namespace sfmviewer {
 
 		// show the config dialog
 		void config();
-
-		// repsond to the timer events
-		void timerEvent(QTimerEvent *event);
 
 	protected:
 
