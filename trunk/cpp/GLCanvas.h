@@ -12,18 +12,9 @@
 #include <boost/optional.hpp>
 #include <QGLWidget>
 
-namespace sfmviewer {
+#include "trackball.h"
 
-	// the data structure for the view port
-	struct ViewPort {
-		float m_shift[3];  // translation
-		float m_quat[4];   // orientation in quaternion format
-		ViewPort() {}
-		ViewPort(float x, float y, float z, float q1, float q2, float q3, float q4) {
-			m_shift[0] = x; m_shift[1] = y; m_shift[2] = z;
-			m_quat[0] = q1; m_quat[1] = q2; m_quat[2] = q3; m_quat[3] = q4;
-		}
-	};
+namespace sfmviewer {
 
 	// callback function types
 	typedef boost::function<void ()> Callback;

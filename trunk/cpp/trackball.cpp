@@ -298,44 +298,44 @@ normalize_quat(float q[4])
 
 /*
  * Build a rotation matrix, given a quaternion rotation (x,y,z,w).
- *
+ * Kai: the original code assumes that m[i][j] means i-th column and j-th row, so I switched i and j
  */
 void
 build_rotmatrix(float m[4][4], const float q[4])
 {
 		// the 1st row
     m[0][0] = 1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]);
-    m[0][1] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
-    m[0][2] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
-    m[0][3] = 0.0f;
+    m[1][0] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
+    m[2][0] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
+    m[3][0] = 0.0f;
 
-    m[1][0] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
+    m[0][1] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
     m[1][1]= 1.0f - 2.0f * (q[2] * q[2] + q[0] * q[0]);
-    m[1][2] = 2.0f * (q[1] * q[2] - q[0] * q[3]);
-    m[1][3] = 0.0f;
+    m[2][1] = 2.0f * (q[1] * q[2] - q[0] * q[3]);
+    m[3][1] = 0.0f;
 
-    m[2][0] = 2.0f * (q[2] * q[0] - q[1] * q[3]);
-    m[2][1] = 2.0f * (q[1] * q[2] + q[0] * q[3]);
+    m[0][2] = 2.0f * (q[2] * q[0] - q[1] * q[3]);
+    m[1][2] = 2.0f * (q[1] * q[2] + q[0] * q[3]);
     m[2][2] = 1.0f - 2.0f * (q[1] * q[1] + q[0] * q[0]);
-    m[2][3] = 0.0f;
-
-    m[3][0] = 0.0f; 
-	m[3][1] = 0.0f;
     m[3][2] = 0.0f;
+
+    m[0][3] = 0.0f;
+    m[1][3] = 0.0f;
+    m[2][3] = 0.0f;
     m[3][3] = 1.0f;
 }
 
 // Kai:: combine both rotation and translation
 void
-build_tran_matrix (float m[4][4], float q[4], float x, float y, float z)
+build_tran_matrix (const ViewPort& viewPort, float m[4][4])
 {
-    // build rotation first
-    build_rotmatrix(m, q); 
+    // create [R 0; 0 1]
+    build_rotmatrix(m, viewPort.m_quat);
     
-    // set up translation
-    m[3][0] = x;
-    m[3][1] = y;
-    m[3][2] = z;
+    // compute -Rt and make [R -Rt; 0 1]
+    m[0][3] = -m[0][0] * viewPort.x() - m[0][1] * viewPort.y() - m[0][2] * viewPort.z();
+    m[1][3] = -m[1][0] * viewPort.x() - m[1][1] * viewPort.y() - m[1][2] * viewPort.z();
+    m[2][3] = -m[2][0] * viewPort.x() - m[2][1] * viewPort.y() - m[2][2] * viewPort.z();
 }
 
 void rotation_to_quaternion( float a[4][4], float q[4] ) 
