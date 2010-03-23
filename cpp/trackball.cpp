@@ -239,6 +239,8 @@ tb_project_to_sphere(float r, float x, float y)
  *
  * NOTE: This routine is written so that q1 or q2 may be the same
  * as dest (or each other).
+ *
+ * Kai: first rotation by q2, then rotate by q1
  */
 
 #define RENORMCOUNT 97
@@ -295,12 +297,13 @@ normalize_quat(float q[4])
 }
 
 /*
- * Build a rotation matrix, given a quaternion rotation.
+ * Build a rotation matrix, given a quaternion rotation (x,y,z,w).
  *
  */
 void
-build_rotmatrix(float m[4][4], float q[4])
+build_rotmatrix(float m[4][4], const float q[4])
 {
+		// the 1st row
     m[0][0] = 1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]);
     m[0][1] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
     m[0][2] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
@@ -365,4 +368,13 @@ void rotation_to_quaternion( float a[4][4], float q[4] )
       q[2] = 0.25f * s;
     }
   }
+}
+
+// dest = R' * t
+void transformByRotation(const float t[3], const float q[4], float dest[3]) {
+	float rot[4][4];
+	build_rotmatrix(rot, q);
+	dest[0] = rot[0][0] * t[0] + rot[1][0] * t[1] + rot[2][0] * t[2];
+	dest[1] = rot[0][1] * t[0] + rot[1][1] * t[1] + rot[2][1] * t[2];
+	dest[2] = rot[0][2] * t[0] + rot[1][2] * t[1] + rot[2][2] * t[2];
 }

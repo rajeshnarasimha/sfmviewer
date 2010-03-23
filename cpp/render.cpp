@@ -7,6 +7,7 @@
  */
 
 #include <boost/foreach.hpp>
+#include <gtsam/Matrix.h>
 
 #include "render.h"
 #include "bunny.h"
@@ -120,6 +121,20 @@ namespace sfmviewer {
 			else
 				drawCamera(cameras[i].v, cameraColors[i], linewidth, true);
 		}
+	}
+
+	/* ************************************************************************* */
+	void drawRGBCamera(const gtsam::Pose3& pose, const GLfloat linewidth, const float alpha) {
+		Matrix r = pose.rotation().matrix();
+		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,0), pose.y()+r(1,0), pose.z()+r(2,0), SFMColor(1.0, 0.0, 0.0, alpha), linewidth); // r
+		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,1), pose.y()+r(1,1), pose.z()+r(2,1), SFMColor(0.0, 1.0, 0.0, alpha), linewidth); // g
+		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,2), pose.y()+r(1,2), pose.z()+r(2,2), SFMColor(0.0, 0.0, 1.0, alpha), linewidth); // b
+	}
+
+	/* ************************************************************************* */
+	void drawRGBCameras(const vector<gtsam::Pose3>& poses, const GLfloat linewidth, const float alpha) {
+		BOOST_FOREACH(const gtsam::Pose3& pose, poses)
+			drawRGBCamera(pose, linewidth, alpha);
 	}
 
 	/* ************************************************************************* */

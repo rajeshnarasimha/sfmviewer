@@ -45,6 +45,9 @@ namespace sfmviewer {
 	void drawCameras(const std::vector<CameraVertices>& cameras,
 			const std::vector<SFMColor>& cameraColors = std::vector<SFMColor>());
 
+	// draw rgb cameras
+	void drawRGBCameras(const std::vector<gtsam::Pose3>& poses, const GLfloat linewidth = 1.0, const float alpha = 1.0);
+
 	// backproject four corners of the image to the system coordinate
 	CameraVertices calcCameraVertices(const gtsam::SimpleCamera& camera, const int img_w = 800, const int img_h = 800);
 

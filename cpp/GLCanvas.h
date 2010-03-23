@@ -55,6 +55,8 @@ namespace sfmviewer {
 		// set the viewport of the opengl camera
 		void setViewPort(const ViewPort& port) { viewPort_ = port; }
 
+		void setTopViewPort(const ViewPort& port) { viewPortTop_ = port; }
+
 		// set the refresh interval
 		void setRefreshInterval(int msec);
 
@@ -88,27 +90,30 @@ namespace sfmviewer {
 
 	private slots:
 
-		// change the speed of mouse operations
-		void changeMouseSpeed();
+		// change to the top view
+		void changeTopView();
 
 	private:
-		// the time for redrawing
-		QTimer *timer_;
-
 		// the last position of mouse clicks
 		QPoint lastPos_;
 
 		int hintWidth_;
 		int hintHeight_;
 
-		// the current opengl viewport
+		// the current viewport (a projection matrix represented as quaternion and -R't)
 		ViewPort viewPort_;
+
+		// the canonical viewports
+		ViewPort viewPortTop_;
 
 		// the pointers of callback functions
 		Callback fun_draw_;
 
 		// the action to change mouse speed
-		QAction* changeMouseSpeedAct;
+		QAction* changeTopViewAct;
+
+		// the timer to force to refresh
+		QTimer *timerRefresh_;
 
 		// timer identifiers and their corresponding callback functions
 		std::map<int, Callback> timer_callbacks_;
