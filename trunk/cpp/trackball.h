@@ -66,7 +66,7 @@ add_quats(float *q1, float *q2, float *dest);
  * given quaternion.
  */
 void
-build_rotmatrix(float m[4][4], float q[4]);
+build_rotmatrix(float m[4][4], const float q[4]);
 
 // added by Kai: combine translation
 void
@@ -81,3 +81,10 @@ void
 axis_to_quat(float a[3], float phi, float q[4]);
 
 void rotation_to_quaternion( float a[4][4], float q[4] );
+
+/**
+ * Kai: transform a coordinate in the original camera coordinate system to the given
+ * coordinate system specified by a rotation ([R, 0])
+ */
+void
+transformByRotation(const float pt[3], const float q[4], float dest[3]);

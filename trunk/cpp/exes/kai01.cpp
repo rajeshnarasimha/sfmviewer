@@ -62,6 +62,12 @@ void sfmviewer::setup()
 	// set the default view port for St. Peter
 	ViewPort viewport(-1.93, -57.07, -200, -0.292426, 0.0699906, 0.0326308, 0.953166);
 	canvas->setViewPort(viewport);
+
+	// set the top view port
+	float trans[3] = {0., -500., 200.}, transTop[3];
+	float q[4] = {-1./sqrt(2.), 0., 0., 1./sqrt(2.)}; // top view
+	transformByRotation(trans, q, transTop);
+	canvas->setTopViewPort(ViewPort(transTop[0], transTop[1], transTop[2], q[0], q[1], q[2], q[3]));
 }
 
 void sfmviewer::draw() {

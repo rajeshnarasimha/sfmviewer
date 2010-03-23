@@ -132,9 +132,74 @@ void advanceFrame() {
 }
 
 /* ************************************************************************* */
+static float orbit_center_x = 0.;    // the center of the orbit
+static float orbit_center_z = 200.;  // the center of the orbit
+static float orbit_radius = 50.0;   // the radius of the camera's orbit circle
+static float orbit_height = -100.0;   // the height of the orbit
+static int orbit_segments = 50;     // how many steps to traverse the orbit
+static int orbit_step = 0;           // the current step in the orbit
+
+
+ViewPort Pose2ViewPort(const float q[4], const float trans[3]) {
+	ViewPort port;
+	return port;
+}
+
+static vector<Pose3> camerasOrbit;
+void computeOrbitCameras() {
+	for(int i=0; i<orbit_segments; i++) {
+		float angle = -M_PI_2 + (float)i / orbit_segments * M_PI * 2;
+
+		float theta = -(M_PI_4 + angle / 2);
+		float q1[4] = {0., sin(theta), 0., cos(theta)};
+		float beta = -M_PI_4 * 0.6;
+		float q2[4] = {sin(beta), 0., 0., cos(beta)};
+		float q[4];
+		add_quats(q2, q1, q);
+		float r[4][4];
+		build_rotmatrix(r, q);
+
+		// compute the translation in the new rotated coordinate system
+		float x = cos(angle) * orbit_radius + orbit_center_x;
+		float z = sin(angle) * orbit_radius + orbit_center_z;
+		float trans[3] = {x, orbit_height, z};
+
+		Pose3 pose(Rot3(r[0][0], r[0][1], r[0][2],
+				r[1][0], r[1][1], r[1][2],
+				r[2][0], r[2][1], r[2][2]),
+				Point3(trans[0], trans[1], trans[2]));
+		camerasOrbit.push_back(pose);
+	}
+	cout << camerasOrbit.size() << " cameras in the orbit" << endl;
+}
+
 // move the camera around an orbit
 void moveCamera() {
+	// the current position on the orbit
+	int segment = orbit_step % orbit_segments;
+	float angle = -M_PI_2 + (float)segment / orbit_segments * M_PI * 2;
 
+	// compute the rotation of the current point on the orbit, refer to quaternions.lyx
+	//float beta = atan2(orbit_height, orbit_radius) / 2;
+	float theta = -(M_PI_4 + angle / 2);
+	float beta = 0.05;
+	float q1[4] = {0., sin(theta), 0., cos(theta)};
+	float q2[4] = {sin(beta), 0., 0., cos(beta)};
+	float q[4];
+	add_quats(q1, q2, q);
+
+	// compute the translation in the new rotated coordinate system
+	float x = cos(angle) * orbit_radius + orbit_center_x;
+	float z = sin(angle) * orbit_radius + orbit_center_z;
+	float trans[3] = {x, orbit_height, z}, transOrbit[3];
+	transformByRotation(trans, q, transOrbit);
+
+	// set up the new viewport
+	//ViewPort viewport(transOrbit[0], transOrbit[1], transOrbit[2], q[0], q[1], q[2], q[3]);
+	ViewPort viewport(0, 0, 0, q[0], q[1], q[2], q[3]);
+	canvas->setViewPort(viewport);
+	canvas->updateGL();
+	orbit_step ++;
 }
 
 /* ************************************************************************* */
@@ -147,8 +212,15 @@ void sfmviewer::setup()
 	loadVisibility();
 
 	// set the default view port for St. Peter
-	ViewPort viewport(-1.93, -57.07, -200, -0.292426, 0.0699906, 0.0326308, 0.953166);
+//	ViewPort viewport(-1.93, -57.07, -200, -0.292426, 0.0699906, 0.0326308, 0.953166);
+	ViewPort viewport(-31, -94, 91, 0., 0., 0., 1.);
 	canvas->setViewPort(viewport);
+
+	// set the top view port
+	float trans[3] = {0., -300., 200.}, transTop[3];
+	float q[4] = {-1./sqrt(2.), 0., 0., 1./sqrt(2.)}; // top view
+	transformByRotation(trans, q, transTop);
+	canvas->setTopViewPort(ViewPort(transTop[0], transTop[1], transTop[2], q[0], q[1], q[2], q[3]));
 
 	// set up the timer for pluging in the visibility data
 	pointColorsNow = pointColors;
@@ -156,7 +228,8 @@ void sfmviewer::setup()
 	canvas->addTimer(advanceFrame, 200);
 
 	// set up the timer for moving the opengl camera
-	canvas->addTimer(moveCamera, 20);
+	//canvas->addTimer(moveCamera, 10);
+	computeOrbitCameras();
 }
 
 /* ************************************************************************* */
@@ -164,5 +237,7 @@ void sfmviewer::draw() {
 	// draw inactive world
 	drawStructure(structure, pointColorsNow);
 	drawCameras(cameras, cameraColorsNow);
+	//drawCameras(camerasOrbit);
+	drawRGBCameras(camerasOrbit, 3.0);
 }
 

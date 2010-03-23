@@ -44,14 +44,20 @@ namespace sfmviewer {
 		// create various actions
 		createActions();
 
-		// create the refresh timer
-		timer_ = new QTimer(this);
-		connect(timer_, SIGNAL(timeout()), this, SLOT(updateGL()));
+		// the timer to force to refresh
+		timerRefresh_ = new QTimer(this);
+		connect(timerRefresh_, SIGNAL(timeout()), this, SLOT(updateGL()));
+
+		// set the view port of the top view
+		float trans[3] = {0., -500., 0.}, transTop[3];
+		float q[4] = {-1./sqrt(2.), 0., 0., 1./sqrt(2.)};
+		transformByRotation(trans, q, transTop);
+		viewPortTop_ = ViewPort(transTop[0], transTop[1], transTop[2], q[0], q[1], q[2], q[3]);
 	}
 
 	/* ************************************************************************* */
 	void GLCanvas::setRefreshInterval(int msec) {
-		msec > 0 ? timer_->start(msec) : timer_->stop();
+		msec > 0 ? timerRefresh_->start(msec) : timerRefresh_->stop();
 	}
 
 	/* ************************************************************************* */
@@ -128,7 +134,7 @@ namespace sfmviewer {
 		float m_shift_step = 0.01f;
 
 		// left click to rotate
-		if (event->buttons() & Qt::LeftButton) {
+		if ((event->buttons() & Qt::LeftButton) && !(event->modifiers() & Qt::ControlModifier)) {
 			QSize ws = size();
 			float spin_quat[4];
 			trackball(spin_quat, (2.0 * lastPos_.x() - ws.width())  / ws.width(),
@@ -137,12 +143,13 @@ namespace sfmviewer {
   				                -(2.0 * event->y()   - ws.height())	/ ws.height());
 			add_quats(spin_quat, viewPort_.m_quat, viewPort_.m_quat);
 		}
-		// right click to translate
-		else if (event->buttons() & Qt::RightButton) {
+		// right click or command + left click to translate
+		else if ((event->buttons() & Qt::RightButton) ||
+				(event->buttons() & Qt::LeftButton) && (event->modifiers() & Qt::ControlModifier)) {
 			float dx = event->x() - lastPos_.x();
 			float dy = lastPos_.y() - event->y();
-			viewPort_.m_shift[0] += dx * m_shift_step;
-			viewPort_.m_shift[1] += dy * m_shift_step;
+			viewPort_.m_shift[0] += dx * m_shift_step * 100;
+			viewPort_.m_shift[1] += dy * m_shift_step * 100;
 		}
 		// middle click to zoom in and zoom out
 		else if (event->buttons() & Qt::MidButton) {
@@ -169,28 +176,15 @@ namespace sfmviewer {
 
 	/* ************************************************************************* */
 	void GLCanvas::createActions() {
-		changeMouseSpeedAct = new QAction(tr("&Mouse speed"), this);
-		changeMouseSpeedAct->setStatusTip(tr(
-				"Change the speed of the mouse operations"));
-		connect(changeMouseSpeedAct, SIGNAL(triggered()), this,
-				SLOT(changeMouseSpeed()));
+		changeTopViewAct = new QAction(tr("&Top view"), this);
+		changeTopViewAct->setStatusTip(tr("Change to the top view"));
+		connect(changeTopViewAct, SIGNAL(triggered()), this, SLOT(changeTopView()));
 	}
 
 	/* ************************************************************************* */
-	void GLCanvas::changeMouseSpeed() {
-		// create a dialog
-		QDialog dlg(this);
-		dlg.setModal(true);
-		QPushButton *ok = new QPushButton("OK", &dlg);
-		ok->setGeometry(10, 10, 100, 30);
-		connect(ok, SIGNAL(clicked()), SLOT(accept()) );
-		QPushButton *cancel = new QPushButton("Cancel", &dlg);
-		cancel->setGeometry(10, 60, 100, 30);
-		connect(cancel, SIGNAL(clicked()), SLOT(reject()) );
-
-		if (dlg.exec()) {
-			cout << "kai1" << endl;
-		}
+	void GLCanvas::changeTopView() {
+		viewPort_ = viewPortTop_;
+		updateGL();
 	}
 
 	/* ************************************************************************* */
@@ -198,7 +192,7 @@ namespace sfmviewer {
 		if (event->modifiers() & Qt::MetaModifier) { // it requires control click
 			QMenu menu(this);
 			cout << "contextMenuEvent" << endl;
-			menu.addAction(changeMouseSpeedAct);
+			menu.addAction(changeTopViewAct);
 			menu.exec(event->globalPos());
 		}
 	}
