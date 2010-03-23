@@ -40,6 +40,22 @@
  * Written by Gavin Bell for Silicon Graphics, November 1988.
  */
 
+#pragma once
+
+// Kai: the data structure for the view port
+struct ViewPort {
+	float m_shift[3];  // translation
+	float m_quat[4];   // orientation in quaternion format
+	ViewPort() {}
+	ViewPort(float x, float y, float z, float q1, float q2, float q3, float q4) {
+		m_shift[0] = x; m_shift[1] = y; m_shift[2] = z;
+		m_quat[0] = q1; m_quat[1] = q2; m_quat[2] = q3; m_quat[3] = q4;
+	}
+	float x() const { return m_shift[0]; }
+	float y() const { return m_shift[1]; }
+	float z() const { return m_shift[2]; }
+};
+
 /*
  * Pass the x and y coordinates of the last and current positions of
  * the mouse, scaled so they are from (-1.0 ... 1.0).
@@ -68,9 +84,9 @@ add_quats(float *q1, float *q2, float *dest);
 void
 build_rotmatrix(float m[4][4], const float q[4]);
 
-// added by Kai: combine translation
+// Kai: combine translation
 void
-build_tran_matrix (float m[4][4], float q[4], float x, float y, float z);
+build_tran_matrix (const ViewPort& viewPort, float m[4][4]);
 
 /*
  * This function computes a quaternion based on an axis (defined by
@@ -88,3 +104,5 @@ void rotation_to_quaternion( float a[4][4], float q[4] );
  */
 void
 transformByRotation(const float pt[3], const float q[4], float dest[3]);
+
+

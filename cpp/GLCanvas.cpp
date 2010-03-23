@@ -14,7 +14,6 @@
 #include <QtOpenGL>
 
 #include "GLCanvas.h"
-#include "trackball.h"
 
 #define SFM_BACKGROUND_COLOR     0.0f, 0.0f, 0.0f, 1.0f
 
@@ -29,8 +28,11 @@ namespace sfmviewer {
 	//   0 -1  0  0      y      -y
 	//   0  0 -1  0      z      -z
 	//   0  0  0  1      1       1
-	const GLfloat m_convert[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, -1.f, 0.f, 0.f, 0.f,
-			0.f, -1.f, 0.f, 0.f, 0.f, 0.f, 1.f };
+	const GLfloat m_convert[4][4] = {
+			{1.,  0.,  0., 0.},
+			{0., -1.,  0., 0.},
+			{0.,	0., -1., 0.},
+			{0.,  0.,  0., 1.}};
 
 	/* ************************************************************************* */
 	GLCanvas::GLCanvas(QWidget *parent) :
@@ -49,10 +51,7 @@ namespace sfmviewer {
 		connect(timerRefresh_, SIGNAL(timeout()), this, SLOT(updateGL()));
 
 		// set the view port of the top view
-		float trans[3] = {0., -500., 0.}, transTop[3];
-		float q[4] = {-1./sqrt(2.), 0., 0., 1./sqrt(2.)};
-		transformByRotation(trans, q, transTop);
-		viewPortTop_ = ViewPort(transTop[0], transTop[1], transTop[2], q[0], q[1], q[2], q[3]);
+		viewPortTop_ = ViewPort(0., -500., 0., -1./sqrt(2.), 0., 0., 1./sqrt(2.));
 	}
 
 	/* ************************************************************************* */
@@ -84,44 +83,89 @@ namespace sfmviewer {
 	/* ************************************************************************* */
 	void GLCanvas::initializeGL() {
 		// remove back faces
-		glDisable( GL_CULL_FACE);
+		glEnable( GL_CULL_FACE);
 		glEnable( GL_DEPTH_TEST);
+		glEnable(GL_MULTISAMPLE);
 
 		// speedups
 		glEnable(GL_DITHER);
-		glShadeModel(GL_SMOOTH);
+		glShadeModel(GL_FLAT);
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 		glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
+
+		glClearColor(SFM_BACKGROUND_COLOR);
+
+//		GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+//		GLfloat light_diffuse[] = { 0.7, 0.7, 0.7, 1.0 };
+//		GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+//		GLfloat light_position[] = { -150.0, 500.0, -300.0, 0.0 };
+//
+//		glEnable(GL_LIGHTING);
+//		glEnable(GL_LIGHT0);
+//		glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+//		glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+//		glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+//		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	}
+
+	/* ************************************************************************* */
+	void print2DArray(const float m[4][4], const string& str) {
+		cout << str << endl;
+		cout << m[0][0] << " " << m[0][1] << " " << m[0][2] << " " << m[0][3] << endl;
+		cout << m[1][0] << " " << m[1][1] << " " << m[1][2] << " " << m[1][3] << endl;
+		cout << m[2][0] << " " << m[2][1] << " " << m[2][2] << " " << m[2][3] << endl;
+		cout << m[3][0] << " " << m[3][1] << " " << m[3][2] << " " << m[3][3] << endl;
+	}
+
+	void print1DArray(const float m[16], const string& str) {
+		cout << str << endl;
+		cout << m[0] << " " << m[4] << " " << m[8]  << " " << m[12] << endl;
+		cout << m[1] << " " << m[5] << " " << m[9]  << " " << m[13] << endl;
+		cout << m[2] << " " << m[6] << " " << m[10] << " " << m[14] << endl;
+		cout << m[3] << " " << m[7] << " " << m[11] << " " << m[15] << endl;
+	}
+
+	void printModelViewMatrix() {
+		float m[16];
+		glGetFloatv(GL_MODELVIEW, m);
+		print1DArray(m, "ModelView");
+	}
+
+	void printProjectionatrix() {
+		float m[16];
+		glGetFloatv(GL_PROJECTION, m);
+		print1DArray(m, "Projection");
 	}
 
 	/* ************************************************************************* */
 	void GLCanvas::paintGL() {
+
 		// Transformations
 		glMatrixMode( GL_MODELVIEW);
 		glLoadIdentity();
-		GLfloat trackball[4][4];
-		build_tran_matrix(trackball, viewPort_.m_quat, viewPort_.m_shift[0],
-				viewPort_.m_shift[1], viewPort_.m_shift[2]);
-		glMultMatrixf((GLfloat*) trackball);
-		glMultMatrixf(m_convert);
+		GLfloat prj[4][4];
+		build_tran_matrix(viewPort_, prj);
+		glMultTransposeMatrixf((GLfloat*)m_convert); // second, convert the camera coordinates to the opengl camera coordinates
+//		printModelViewMatrix();
+		glMultTransposeMatrixf((GLfloat*)prj);       // first, project the points in the world coordinates to the camera coorrdinates
+//		print2DArray(prj, "trackball");
+//		printModelViewMatrix();
 
 		// background
-		glClearColor(SFM_BACKGROUND_COLOR);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		fun_draw_();
 
-		glFlush();
+//		glFlush();
+		swapBuffers();
 	}
 
 	/* ************************************************************************* */
 	void GLCanvas::resizeGL(int width, int height) {
-		glViewport(0, 0, (GLint) width, (GLint) height);
+		// the calibration matrix only depends on the window aspect ratio
 		glMatrixMode( GL_PROJECTION);
 		glLoadIdentity();
-		gluPerspective(60.0, (GLfloat) width / height, 0.001, 1000.0); // the 3rd parameter
-		glMatrixMode( GL_MODELVIEW);
-		glLoadIdentity();
+		gluPerspective(60.0, (GLfloat) width / height, 0.00001, 1000.0); // the 3rd parameter
 	}
 
 	/* ************************************************************************* */
@@ -134,7 +178,8 @@ namespace sfmviewer {
 		float m_shift_step = 0.01f;
 
 		// left click to rotate
-		if ((event->buttons() & Qt::LeftButton) && !(event->modifiers() & Qt::ControlModifier)) {
+		if ((event->buttons() & Qt::LeftButton) && !(event->modifiers() & Qt::ControlModifier)
+				&& !(event->modifiers() & Qt::AltModifier)) {
 			QSize ws = size();
 			float spin_quat[4];
 			trackball(spin_quat, (2.0 * lastPos_.x() - ws.width())  / ws.width(),
@@ -152,7 +197,8 @@ namespace sfmviewer {
 			viewPort_.m_shift[1] += dy * m_shift_step * 100;
 		}
 		// middle click to zoom in and zoom out
-		else if (event->buttons() & Qt::MidButton) {
+		else if ((event->buttons() & Qt::MidButton) ||
+				(event->buttons() & Qt::LeftButton) && (event->modifiers() & Qt::AltModifier)) {
 			float dx = event->x() - lastPos_.x();
 			float dy = lastPos_.y() - event->y();
 			if (fabs(dy) > fabs(dx))
