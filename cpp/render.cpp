@@ -10,17 +10,18 @@
 #include <gtsam/Matrix.h>
 
 #include "render.h"
+#include "trackball.h"
 #include "bunny.h"
 
 using namespace std;
+using namespace gtsam;
 
 #define SFM_POINT_COLOR          1.0f, 1.0f, 1.0f, 1.0f
 #define SFM_CAMERA_COLOR  240.f/255.f, 140.0f/255.f, 24.0f/255.f,  1.0f
 
 #define DRAWONERECT(X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4) \
-	glColor4f(SFM_CAMERA_COLOR); \
 	glEnable(GL_BLEND); \
-	glBlendFunc(GL_SRC_COLOR,GL_DST_COLOR); \
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA); \
 	glBegin(GL_POLYGON);\
 	glVertex3f(X1,Y1,Z1); \
 	glVertex3f(X2,Y2,Z2); \
@@ -39,8 +40,7 @@ namespace sfmviewer {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// point rendering setting
-		glEnable( GL_POINT_SMOOTH);
-		glPointSize(2.0);
+		glPointSize(1.0);
 
 		if (!structure.empty()) {
 			// set points to draw
@@ -62,19 +62,6 @@ namespace sfmviewer {
 		}
 
 		glDisable(GL_BLEND);
-	}
-
-	/* ************************************************************************* */
-	void drawBunny() {
-		vector<Vertex> structure;
-		Vertex v;
-		for (int i = 0; i < bunny_nr_vertex; i++) {
-			v.X = (GLfloat) bunny_vertices[i][0];
-			v.Y = -(GLfloat) bunny_vertices[i][1];
-			v.Z = (GLfloat) bunny_vertices[i][2];
-			structure.push_back(v);
-		}
-		drawStructure(structure);
 	}
 
 	/* ************************************************************************* */
@@ -105,40 +92,45 @@ namespace sfmviewer {
     drawOneLine(pv[4].X,pv[4].Y,pv[4].Z, pv[1].X,pv[1].Y,pv[1].Z, color, linewidth);
 
     if (fill) {
-        DRAWONERECT(pv[1].X, pv[1].Y, pv[1].Z, pv[2].X, pv[2].Y, pv[2].Z,
-                    pv[3].X, pv[3].Y, pv[3].Z, pv[4].X, pv[4].Y, pv[4].Z);
+    	glColor4f(color.r, color.g, color.b, color.alpha);
+    	DRAWONERECT(pv[1].X, pv[1].Y, pv[1].Z, pv[2].X, pv[2].Y, pv[2].Z,
+    			pv[3].X, pv[3].Y, pv[3].Z, pv[4].X, pv[4].Y, pv[4].Z);
     }
 		glDisable(GL_BLEND);
 	}
 
 	/* ************************************************************************* */
-	void drawCameras(const vector<CameraVertices>& cameras, const vector<SFMColor>& cameraColors) {
+	void drawCameras(const vector<CameraVertices>& cameras, const vector<SFMColor>& cameraColors, const bool fill) {
 
 		GLfloat linewidth = 1;
 		for (size_t i=0; i<cameras.size(); i++) {
 			if (cameraColors.empty())
-				drawCamera(cameras[i].v, default_camera_color, linewidth, true);
+				drawCamera(cameras[i].v, default_camera_color, linewidth, fill);
 			else
-				drawCamera(cameras[i].v, cameraColors[i], linewidth, true);
+				drawCamera(cameras[i].v, cameraColors[i], linewidth, fill);
 		}
 	}
 
 	/* ************************************************************************* */
-	void drawRGBCamera(const gtsam::Pose3& pose, const GLfloat linewidth, const float alpha) {
+	void drawRGBCamera(const Pose3& pose, const GLfloat linewidth, const float scale) {
 		Matrix r = pose.rotation().matrix();
-		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,0), pose.y()+r(1,0), pose.z()+r(2,0), SFMColor(1.0, 0.0, 0.0, alpha), linewidth); // r
-		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,1), pose.y()+r(1,1), pose.z()+r(2,1), SFMColor(0.0, 1.0, 0.0, alpha), linewidth); // g
-		drawOneLine(pose.x(), pose.y(), pose.z(), pose.x()+r(0,2), pose.y()+r(1,2), pose.z()+r(2,2), SFMColor(0.0, 0.0, 1.0, alpha), linewidth); // b
+		r = r * scale;
+		float xr = pose.x()+r(0,0), yr = pose.y()+r(1,0), zr = pose.z()+r(2,0);
+		float xg = pose.x()+r(0,1), yg = pose.y()+r(1,1), zg = pose.z()+r(2,1);
+		float xb = pose.x()+r(0,2), yb = pose.y()+r(1,2), zb = pose.z()+r(2,2);
+		drawOneLine(pose.x(), pose.y(), pose.z(), xr, yr, zr, SFMColor(1.0, 0.0, 0.0, 1.), linewidth); // r
+		drawOneLine(pose.x(), pose.y(), pose.z(), xg, yg, zg, SFMColor(0.0, 1.0, 0.0, 1.), linewidth); // g
+		drawOneLine(pose.x(), pose.y(), pose.z(), xb, yb, zb, SFMColor(0.0, 0.0, 1.0, 1.), linewidth); // b
 	}
 
 	/* ************************************************************************* */
-	void drawRGBCameras(const vector<gtsam::Pose3>& poses, const GLfloat linewidth, const float alpha) {
-		BOOST_FOREACH(const gtsam::Pose3& pose, poses)
-			drawRGBCamera(pose, linewidth, alpha);
+	void drawRGBCameras(const vector<Pose3>& poses, const GLfloat linewidth, const float scale) {
+		BOOST_FOREACH(const Pose3& pose, poses)
+			drawRGBCamera(pose, linewidth, scale);
 	}
 
 	/* ************************************************************************* */
-	CameraVertices calcCameraVertices(const gtsam::SimpleCamera& camera, const int img_w, const int img_h)
+	CameraVertices calcCameraVertices(const SimpleCamera& camera, const int img_w, const int img_h, const float scale)
 	{
 		CameraVertices cam_vertices;
 
@@ -148,13 +140,13 @@ namespace sfmviewer {
 		cam_vertices.v[0].Z = camera.pose().z();
 
 		// generate four vertex corners
-		vector<gtsam::Point2> corners;
-		corners.push_back(gtsam::Point2(0.f,img_h-1));
-		corners.push_back(gtsam::Point2(img_w-1,img_h-1));
-		corners.push_back(gtsam::Point2(img_w-1,0.f));
-		corners.push_back(gtsam::Point2(0.f,0.f));
+		vector<Point2> corners;
+		corners.push_back(Point2(0.f,img_h-1));
+		corners.push_back(Point2(img_w-1,img_h-1));
+		corners.push_back(Point2(img_w-1,0.f));
+		corners.push_back(Point2(0.f,0.f));
 		for(int j=1; j<=4; j++) {
-			gtsam::Point3 tmp = camera.backproject(corners[j-1], 1.);
+			Point3 tmp = camera.backproject(corners[j-1], scale);
 			cam_vertices.v[j].X = tmp.x();
 			cam_vertices.v[j].Y = tmp.y();
 			cam_vertices.v[j].Z = tmp.z();
@@ -162,4 +154,93 @@ namespace sfmviewer {
 
 		return cam_vertices;
 	}
+
+	/* ************************************************************************* */
+//	void drawThumbnail() {
+//		glMatrixMode(GL_PROJECTION);
+//		glPushMatrix();
+//		glLoadIdentity();
+//		gluOrtho2D(0,(GLint)w, 0, (GLint)h);
+//
+//		glMatrixMode(GL_MODELVIEW);
+//		glPushMatrix();
+//		glLoadIdentity();
+//
+//		glEnable(GL_BLEND);
+//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//
+//		glEnable(GL_TEXTURE_2D);
+//		glBindTexture(GL_TEXTURE_2D, m_texID_thumbnail);
+//		glBegin(GL_QUADS);
+//		glColor4f(1.0f, 1.0f, 1.0f,  0.75f);
+//		glTexCoord2f(0.0f, 0.0f); glVertex2f( m_quad_thumbnail[0], m_quad_thumbnail[1] );
+//		glTexCoord2f(1.0f, 0.0f); glVertex2f( m_quad_thumbnail[2], m_quad_thumbnail[3] );
+//		glTexCoord2f(1.0f, 1.0f); glVertex2f( m_quad_thumbnail[4], m_quad_thumbnail[5] );
+//		glTexCoord2f(0.0f, 1.0f); glVertex2f( m_quad_thumbnail[6], m_quad_thumbnail[7] );
+//		glEnd();
+//
+//		glDisable(GL_TEXTURE_2D);
+//		glDisable(GL_BLEND);
+//
+//		glMatrixMode(GL_MODELVIEW);
+//		glPopMatrix();
+//		glMatrixMode(GL_PROJECTION);
+//		glPopMatrix();
+//	}
+
+	/* ************************************************************************* */
+	void drawBunny() {
+		vector<Vertex> structure;
+		Vertex v;
+		for (int i = 0; i < bunny_nr_vertex; i++) {
+			v.X = (GLfloat) bunny_vertices[i][0];
+			v.Y = -(GLfloat) bunny_vertices[i][1];
+			v.Z = (GLfloat) bunny_vertices[i][2];
+			structure.push_back(v);
+		}
+		drawStructure(structure);
+	}
+	/* ************************************************************************* */
+	void drawCameraCircle() {
+		int numCameras = 20;
+		float orbit_center_x = 0.;
+		float orbit_center_z = 0.;
+		float orbit_height = 0.;
+		float orbit_radius = 50.;
+		int img_w = 1600, img_h = 1600;
+		float scale = 7.;
+		Cal3_S2 k(120., img_w, img_h);
+
+		vector<Pose3> poses;
+		vector<CameraVertices> cameras;
+		for(int i=0; i<numCameras; i++) {
+
+			// compute the rotation
+			float angle = -M_PI_2 + (float)i / numCameras * M_PI * 2;
+			float theta = -(M_PI_4 + angle / 2);
+			float q1[4] = {0., sin(theta), 0., cos(theta)};
+			float beta = -M_PI_4;
+			float q2[4] = {sin(beta), 0., 0., cos(beta)};
+			float q[4];
+			add_quats(q2, q1, q);
+			float r[3][3];
+			build_rotmatrix(r, q);
+
+			// compute the translation
+			float x = cos(angle) * orbit_radius + orbit_center_x;
+			float z = sin(angle) * orbit_radius + orbit_center_z;
+			float trans[3] = {x, orbit_height, z};
+
+			Pose3 pose(Rot3(r[0][0], r[0][1], r[0][2],
+											r[1][0], r[1][1], r[1][2],
+											r[2][0], r[2][1], r[2][2]),
+					Point3(trans[0], trans[1], trans[2]));
+			poses.push_back(pose);
+			cameras.push_back(calcCameraVertices(SimpleCamera(k, pose), img_w, img_h, scale));
+		}
+		drawRGBCameras(poses, 1., scale);
+		drawCameras(cameras);
+
+	}
+
 } // namespace sfmviewer

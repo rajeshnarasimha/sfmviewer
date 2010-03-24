@@ -297,45 +297,44 @@ normalize_quat(float q[4])
 }
 
 /*
- * Build a rotation matrix, given a quaternion rotation (x,y,z,w).
- * Kai: the original code assumes that m[i][j] means i-th column and j-th row, so I switched i and j
+ * Build a rotation matrix R, given a quaternion rotation (x,y,z,w).
+ * Kai: note that the camera pose is (R,t), and the projection matrix is (R', -R't)
  */
 void
-build_rotmatrix(float m[4][4], const float q[4])
+build_rotmatrix(float m[3][3], const float q[4])
 {
 		// the 1st row
     m[0][0] = 1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]);
-    m[1][0] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
-    m[2][0] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
-    m[3][0] = 0.0f;
+    m[0][1] = 2.0f * (q[0] * q[1] - q[2] * q[3]);
+    m[0][2] = 2.0f * (q[2] * q[0] + q[1] * q[3]);
 
-    m[0][1] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
+    m[1][0] = 2.0f * (q[0] * q[1] + q[2] * q[3]);
     m[1][1]= 1.0f - 2.0f * (q[2] * q[2] + q[0] * q[0]);
-    m[2][1] = 2.0f * (q[1] * q[2] - q[0] * q[3]);
-    m[3][1] = 0.0f;
+    m[1][2] = 2.0f * (q[1] * q[2] - q[0] * q[3]);
 
-    m[0][2] = 2.0f * (q[2] * q[0] - q[1] * q[3]);
-    m[1][2] = 2.0f * (q[1] * q[2] + q[0] * q[3]);
+    m[2][0] = 2.0f * (q[2] * q[0] - q[1] * q[3]);
+    m[2][1] = 2.0f * (q[1] * q[2] + q[0] * q[3]);
     m[2][2] = 1.0f - 2.0f * (q[1] * q[1] + q[0] * q[0]);
-    m[3][2] = 0.0f;
-
-    m[0][3] = 0.0f;
-    m[1][3] = 0.0f;
-    m[2][3] = 0.0f;
-    m[3][3] = 1.0f;
 }
 
-// Kai:: combine both rotation and translation
+// Kai: the projection matrix is [R' -R't; 0 1]
 void
 build_tran_matrix (const ViewPort& viewPort, float m[4][4])
 {
     // create [R 0; 0 1]
-    build_rotmatrix(m, viewPort.m_quat);
+		float r[3][3];
+    build_rotmatrix(r, viewPort.m_quat);
     
+    m[0][0] = r[0][0];     m[0][1] = r[1][0];   m[0][2] = r[2][0];
+    m[1][0] = r[0][1];     m[1][1] = r[1][1];   m[1][2] = r[2][1];
+    m[2][0] = r[0][2];     m[2][1] = r[1][2];   m[2][2] = r[2][2];
+    m[3][0] = 0.;          m[3][1] = 0.;        m[3][2] = 0.;         m[3][3] = 1.;
+
     // compute -Rt and make [R -Rt; 0 1]
     m[0][3] = -m[0][0] * viewPort.x() - m[0][1] * viewPort.y() - m[0][2] * viewPort.z();
     m[1][3] = -m[1][0] * viewPort.x() - m[1][1] * viewPort.y() - m[1][2] * viewPort.z();
     m[2][3] = -m[2][0] * viewPort.x() - m[2][1] * viewPort.y() - m[2][2] * viewPort.z();
+
 }
 
 void rotation_to_quaternion( float a[4][4], float q[4] ) 
@@ -368,13 +367,4 @@ void rotation_to_quaternion( float a[4][4], float q[4] )
       q[2] = 0.25f * s;
     }
   }
-}
-
-// dest = R' * t
-void transformByRotation(const float t[3], const float q[4], float dest[3]) {
-	float rot[4][4];
-	build_rotmatrix(rot, q);
-	dest[0] = rot[0][0] * t[0] + rot[1][0] * t[1] + rot[2][0] * t[2];
-	dest[1] = rot[0][1] * t[0] + rot[1][1] * t[1] + rot[2][1] * t[2];
-	dest[2] = rot[0][2] * t[0] + rot[1][2] * t[1] + rot[2][2] * t[2];
 }

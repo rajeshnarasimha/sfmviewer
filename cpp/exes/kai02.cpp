@@ -19,6 +19,7 @@ using namespace sfmviewer;
 #define LINESIZE 81920
 static const string filename = "/Users/nikai/borg/sfmviewer/data/StPeter.txt";
 static const string visibility_filename = "/Users/nikai/borg/sfmviewer/data/StPeter_visibility.txt";
+static const int slow_motion = 1;
 
 /**
  * 3D world and the visibilities
@@ -29,6 +30,17 @@ static vector<CameraVertices> cameras;       // 3d cameras
 static vector<SFMColor> cameraColors;        // the colors of 3d cameras
 static map<int, vector<int> > visibileFeatures; // the indices of visible features
 static map<int, vector<int> > neighborCameras;  // the indices of neighbor cameras
+static const SFMColor camera_color(0., 1., 0., 1.);
+
+/**
+ * camera motions
+ */
+static float orbit_center_x = 0.;    // the center of the orbit
+static float orbit_center_z = 200.;  // the center of the orbit
+static float orbit_radius = 300.0;   // the radius of the camera's orbit circle
+static float orbit_height = -200.0;   // the height of the orbit
+static int orbit_segments = 720;     // how many steps to traverse the orbit
+static int orbit_step = 250;           // the current step in the orbit
 
 /**
  * information about the current frame
@@ -49,20 +61,21 @@ void load3D() {
 			double x, y, z, r, g, b;
 			is >> x >> y >> z >> r >> g >> b;
 			structure.push_back(Vertex(x,y,z));
-			pointColors.push_back(SFMColor(r, g, b, 0.2));
+			r = 0.5; g = 0.5; b = 0.5;
+			pointColors.push_back(SFMColor(r, g, b, 1.0));
 		}
 
 		// load 3D camera
 		if (tag == "POSE3") {
 			double x, y, z, r11, r12, r13, r21, r22, r23, r31, r32, r33;
 			is >> x >> y >> z
-				 >> r11 >> r12 >> r13
-				 >> r21 >> r22 >> r23
-				 >> r31 >> r32 >> r33;
+				 >> r11 >> r21 >> r31
+				 >> r12 >> r22 >> r32
+				 >> r13 >> r23 >> r33;
 			Pose3 pose(Rot3(r11, r12, r13, r21, r22, r23, r31, r32, r33), Point3(x, y, z));
 			SimpleCamera camera(Cal3_S2(120., 1600, 1600), pose);
-			cameras.push_back(calcCameraVertices(camera, 1600, 1600));
-			cameraColors.push_back(SFMColor(default_camera_color.r, default_camera_color.g, default_camera_color.b, 0.2));
+			cameras.push_back(calcCameraVertices(camera, 1600, 1600, 7.0));
+			cameraColors.push_back(SFMColor(camera_color.r, camera_color.g, camera_color.b, 0.2));
 		}
 
 		is.ignore(LINESIZE, '\n');
@@ -105,23 +118,30 @@ void loadVisibility() {
 
 /* ************************************************************************* */
 // show the visibility of the next frame
-void advanceFrame() {
-	// change point colors
-	pointColorsNow = pointColors;
-	if (step >=0 && step < visibileFeatures.size()) {
-		BOOST_FOREACH(const int& i, visibileFeatures.find(step)->second)
-			pointColorsNow[i].alpha = 1.0;
-	}
-
+void nextVisibility() {
 	// change camera colors
 	cameraColorsNow = cameraColors;
 	if (step >=0 && step < neighborCameras.size()) {
 		cameraColorsNow[step] = SFMColor(1.0, 0.0, 0.0, 1.0);
 		BOOST_FOREACH(const int& i, neighborCameras.find(step)->second)
-				cameraColorsNow[i].alpha = 1.0;
+			cameraColorsNow[i].alpha = 1.0;
+	}
+
+	// change point colors
+	pointColorsNow = pointColors;
+	if (step >=0 && step < visibileFeatures.size()) {
+		BOOST_FOREACH(const int& i, visibileFeatures.find(step)->second) {
+			pointColorsNow[i].r     = 1.0;
+			pointColorsNow[i].g     = 0.75;
+			pointColorsNow[i].b     = 0.15;
+			pointColorsNow[i].alpha = 1.0;
+		}
 	}
 
 	canvas->updateGL();
+
+	if (step == visibileFeatures.size())
+		app->quit();
 
 	// find the next frame that has visibility information
 	while(true) {
@@ -132,60 +152,7 @@ void advanceFrame() {
 }
 
 /* ************************************************************************* */
-static float orbit_center_x = 0.;    // the center of the orbit
-static float orbit_center_z = 200.;  // the center of the orbit
-static float orbit_radius = 300.0;   // the radius of the camera's orbit circle
-static float orbit_height = -200.0;   // the height of the orbit
-static int orbit_segments = 720;     // how many steps to traverse the orbit
-static int orbit_step = 0;           // the current step in the orbit
-
-//static float orbit_center_x = 0.;    // the center of the orbit
-//static float orbit_center_z = 0.;  // the center of the orbit
-//static float orbit_radius = 2.0;   // the radius of the camera's orbit circle
-//static float orbit_height = -1.;   // the height of the orbit
-//static int orbit_segments = 720;     // how many steps to traverse the orbit
-//static int orbit_step = 0;           // the current step in the orbit
-
-static ViewPort initViewPort;
-
-
-static vector<Pose3> camerasOrbit;
-void computeOrbitCameras() {
-	for(int i=0; i<orbit_segments; i++) {
-		float angle = -M_PI_2 + (float)i / orbit_segments * M_PI * 2;
-
-		float theta = -(M_PI_4 + angle / 2);
-		float q1[4] = {0., sin(theta), 0., cos(theta)};
-		float beta = -M_PI_4 * 0.6;
-		float q2[4] = {sin(beta), 0., 0., cos(beta)};
-		float q[4];
-		add_quats(q2, q1, q);
-		float r[4][4];
-		build_rotmatrix(r, q);
-
-		// compute the translation in the new rotated coordinate system
-		float x = cos(angle) * orbit_radius + orbit_center_x;
-		float z = sin(angle) * orbit_radius + orbit_center_z;
-		float trans[3] = {x, orbit_height, z};
-
-		Pose3 pose(Rot3(r[0][0], r[0][1], r[0][2],
-				r[1][0], r[1][1], r[1][2],
-				r[2][0], r[2][1], r[2][2]),
-				Point3(trans[0], trans[1], trans[2]));
-		camerasOrbit.push_back(pose);
-
-		if (i == 0) {
-			cout << "kai1 " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << endl;
-			initViewPort = ViewPort(trans[0], trans[1], trans[2], q[0], q[1], q[2], q[3]);
-		}
-	}
-	cout << camerasOrbit.size() << " cameras in the orbit" << endl;
-}
-
-// move the camera around an orbit
-void moveCamera() {
-	// the current position on the orbit
-	int segment = orbit_step % orbit_segments;
+ViewPort computeOrbitCamera(const int segment) {
 	float angle = -M_PI_2 + (float)segment / orbit_segments * M_PI * 2;
 
 	// compute the rotation of the current point on the orbit, refer to quaternions.lyx
@@ -202,9 +169,14 @@ void moveCamera() {
 	float z = sin(angle) * orbit_radius + orbit_center_z;
 	float trans[3] = {x, orbit_height, z};
 
-	// set up the new viewport
-	ViewPort viewport(trans[0], trans[1], trans[2], q[0], q[1], q[2], q[3]);
-	canvas->setViewPort(viewport);
+	return ViewPort(trans[0], trans[1], trans[2], q[0], q[1], q[2], q[3]);
+}
+
+// move the camera around an orbit
+void moveCamera() {
+	// the current position on the orbit
+	int segment = orbit_step % orbit_segments;
+	canvas->setViewPort(computeOrbitCamera(segment));
 	canvas->updateGL();
 	orbit_step ++;
 }
@@ -218,11 +190,9 @@ void sfmviewer::setup()
 	// load the visibility file
 	loadVisibility();
 
-	computeOrbitCameras();
-
 	// set the default view port for St. Peter
 //	canvas->setViewPort(ViewPort(119., -257., -100., -0.341, -0.223, -0.081, 0.909));
-	canvas->setViewPort(initViewPort);
+	canvas->setViewPort(computeOrbitCamera(orbit_step));
 
 	// set the top view port
 	canvas->setTopViewPort(ViewPort(0., -500., 200., -1./sqrt(2.), 0., 0., 1./sqrt(2.)));
@@ -230,17 +200,17 @@ void sfmviewer::setup()
 	// set up the timer for pluging in the visibility data
 	pointColorsNow = pointColors;
 	cameraColorsNow = cameraColors;
-	canvas->addTimer(advanceFrame, 200);
+	canvas->addTimer(nextVisibility, 200*slow_motion);
 
 	// set up the timer for moving the opengl camera
-	canvas->addTimer(moveCamera, 20);
+	canvas->addTimer(moveCamera, 20*slow_motion);
 }
 
 /* ************************************************************************* */
 void sfmviewer::draw() {
 	// draw inactive world
 	drawStructure(structure, pointColorsNow);
-//	drawCameras(cameras, cameraColorsNow);
-///	drawBunny();
+	drawCameras(cameras, cameraColorsNow, false);
+//	drawCameraCircle();
 }
 

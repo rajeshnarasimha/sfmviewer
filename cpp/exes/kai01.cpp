@@ -8,7 +8,6 @@
 #include <fstream>
 
 #include "main.h"
-#include "trackball.h"
 
 using namespace std;
 using namespace gtsam;
@@ -45,7 +44,7 @@ void load3d() {
 			>> r31 >> r32 >> r33;
 			Pose3 pose(Rot3(r11, r12, r13, r21, r22, r23, r31, r32, r33), Point3(x, y, z));
 			SimpleCamera camera(Cal3_S2(120., 1600, 1600), pose);
-			cameras.push_back(calcCameraVertices(camera, 1600, 1600));
+			cameras.push_back(calcCameraVertices(camera, 1600, 1600, 7.));
 		}
 
 		is.ignore(LINESIZE, '\n');
@@ -70,4 +69,5 @@ void sfmviewer::setup()
 void sfmviewer::draw() {
 	drawStructure(structure, pointColors);
 	drawCameras(cameras);
+//	drawCameraCircle();
 }
