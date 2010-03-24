@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
   canvas = window->canvas();
 
   // initialize the window
+  setup();
   window->setSize(width, height);
   window->setDrawFunc(draw);
-  setup();
   window->show();
   return app->exec();
 }

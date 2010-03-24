@@ -20,7 +20,7 @@ using namespace sfmviewer;
 #define LINESIZE 81920
 static const string filename = "/Users/nikai/borg/sfmviewer/data/StPeter.txt";
 static const string visibility_filename = "/Users/nikai/borg/sfmviewer/data/StPeter_visibility.txt";
-static const int slow_motion = 1;
+static const float slow_motion = 2.2;
 
 /**
  * 3D world and the visibilities
@@ -36,17 +36,18 @@ static const SFMColor camera_color(0., 1., 0., 1.);
 /**
  * camera motions
  */
-static float orbit_center_x = 0.;    // the center of the orbit
-static float orbit_center_z = 200.;  // the center of the orbit
-static float orbit_radius = 300.0;   // the radius of the camera's orbit circle
+static float orbit_center_x = 0.;     // the center of the orbit
+static float orbit_center_z = 200.;   // the center of the orbit
+static float orbit_radius = 300.0;    // the radius of the camera's orbit circle
 static float orbit_height = -200.0;   // the height of the orbit
-static int orbit_segments = 720;     // how many steps to traverse the orbit
-static int orbit_step = 250;           // the current step in the orbit
+static int orbit_segments = 720;      // how many steps to traverse the orbit
+static int orbit_step = 250;          // the current step in the orbit
 
 /**
  * information about the current frame
  */
 static size_t step = 0;
+static size_t step_size = 1;
 static vector<SFMColor> pointColorsNow;
 static vector<SFMColor> cameraColorsNow;
 
@@ -56,8 +57,9 @@ static vector<SFMColor> cameraColorsNow;
 static vector<string> thumbnailNames;
 static GLuint queryTexID = 0;
 static vector<GLuint> nnTexIDs;
-static int thumbnail_width = 175, thumbnail_height = 117;
-static int thumbnail_space = 28;
+static float window_scale = 1;
+static int thumbnail_width = window_scale * 175, thumbnail_height = window_scale *  117;
+static int thumbnail_space = window_scale * 28;
 
 /* ************************************************************************* */
 void load3D() {
@@ -181,12 +183,12 @@ void nextVisibility() {
 	canvas->updateGL();
 
 	// quit if all the data has been processed
-	if (step == visibileFeatures.size())
+	if (step + step_size >= visibileFeatures.size())
 		app->quit();
 
 	// find the next frame that has visibility information
 	while(true) {
-		step == visibileFeatures.size() ? step = 0 : step++;
+		step >= visibileFeatures.size() ? step = 0 : step += step_size;
 		if (visibileFeatures.find(step) != visibileFeatures.end())
 			break;
 	}
@@ -225,6 +227,10 @@ void moveCamera() {
 /* ************************************************************************* */
 void sfmviewer::setup()
 {
+	// set window size
+	width = 1024;
+	height = 768;
+
 	// load 3d
 	load3D();
 
@@ -241,10 +247,10 @@ void sfmviewer::setup()
 	// set up the timer for pluging in the visibility data
 	pointColorsNow = pointColors;
 	cameraColorsNow = cameraColors;
-	canvas->addTimer(nextVisibility, 200*slow_motion);
+	canvas->addTimer(nextVisibility, slow_motion * 100);
 
 	// set up the timer for moving the opengl camera
-	canvas->addTimer(moveCamera, 20*slow_motion);
+	canvas->addTimer(moveCamera, slow_motion * 60);
 }
 
 /* ************************************************************************* */
@@ -254,11 +260,13 @@ void sfmviewer::draw() {
 	drawCameras(cameras, cameraColorsNow, false);
 //	drawCameraCircle();
 
-	int left = 17;
-	drawThumbnail(queryTexID, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(1.,0.,0.,1.));
-	BOOST_FOREACH(const GLuint& id, nnTexIDs) {
-		left += thumbnail_width + thumbnail_space;
-		drawThumbnail(id, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(0.,1.,0.,1.));
+	int left = window_scale * 17;
+	if (!nnTexIDs.empty()) {
+		drawThumbnail(queryTexID, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(1.,0.,0.,1.));
+		BOOST_FOREACH(const GLuint& id, nnTexIDs) {
+			left += thumbnail_width + thumbnail_space;
+			drawThumbnail(id, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(0.,1.,0.,1.));
+		}
 	}
 }
 
