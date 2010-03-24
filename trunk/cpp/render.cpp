@@ -266,7 +266,6 @@ namespace sfmviewer {
 		}
 		drawRGBCameras(poses, 1., scale);
 		drawCameras(cameras);
-
 	}
 
 } // namespace sfmviewer
