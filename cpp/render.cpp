@@ -155,38 +155,64 @@ namespace sfmviewer {
 		return cam_vertices;
 	}
 
+	GLuint loadThumbnailTexture(const QImage& image) {
+		GLuint texID;
+		glEnable(GL_TEXTURE_2D);
+		glGenTextures(1, &texID);
+		glBindTexture(GL_TEXTURE_2D, texID);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT );
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
+		glDisable(GL_TEXTURE_2D);
+		return texID;
+	}
+
+
 	/* ************************************************************************* */
-//	void drawThumbnail() {
-//		glMatrixMode(GL_PROJECTION);
-//		glPushMatrix();
-//		glLoadIdentity();
-//		gluOrtho2D(0,(GLint)w, 0, (GLint)h);
-//
-//		glMatrixMode(GL_MODELVIEW);
-//		glPushMatrix();
-//		glLoadIdentity();
-//
-//		glEnable(GL_BLEND);
-//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//
-//		glEnable(GL_TEXTURE_2D);
-//		glBindTexture(GL_TEXTURE_2D, m_texID_thumbnail);
-//		glBegin(GL_QUADS);
-//		glColor4f(1.0f, 1.0f, 1.0f,  0.75f);
-//		glTexCoord2f(0.0f, 0.0f); glVertex2f( m_quad_thumbnail[0], m_quad_thumbnail[1] );
-//		glTexCoord2f(1.0f, 0.0f); glVertex2f( m_quad_thumbnail[2], m_quad_thumbnail[3] );
-//		glTexCoord2f(1.0f, 1.0f); glVertex2f( m_quad_thumbnail[4], m_quad_thumbnail[5] );
-//		glTexCoord2f(0.0f, 1.0f); glVertex2f( m_quad_thumbnail[6], m_quad_thumbnail[7] );
-//		glEnd();
-//
-//		glDisable(GL_TEXTURE_2D);
-//		glDisable(GL_BLEND);
-//
-//		glMatrixMode(GL_MODELVIEW);
-//		glPopMatrix();
-//		glMatrixMode(GL_PROJECTION);
-//		glPopMatrix();
-//	}
+	void drawThumbnail(const GLuint texID, const QSize& size, const QRectF& rect, const SFMColor& color) {
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		gluOrtho2D(0,(GLint)size.width(), 0, (GLint)size.height());
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// draw the textures
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, texID);
+		glBegin(GL_QUADS);
+		glColor4f(1.0f, 1.0f, 1.0f,  0.75f);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(rect.right(), rect.bottom());
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(rect.left(),  rect.bottom());
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(rect.left(),  rect.top());
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(rect.right(), rect.top());
+		glEnd();
+
+		// draw the frame
+  	glColor4f(color.r, color.g, color.b, color.alpha);
+		glLineWidth(3.);
+		glBegin(GL_LINES);
+  	glVertex2f(rect.left() -1, rect.top()-1);    glVertex2f(rect.left() -1, rect.bottom()+1);
+  	glVertex2f(rect.left() -1, rect.bottom()+1); glVertex2f(rect.right()+1, rect.bottom()+1);
+  	glVertex2f(rect.right()+1, rect.bottom()+1); glVertex2f(rect.right()+1, rect.top()-1);
+  	glVertex2f(rect.right()+1, rect.top()-1);    glVertex2f(rect.left() -1, rect.top()-1);
+  	glEnd();
+
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_BLEND);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+	}
 
 	/* ************************************************************************* */
 	void drawBunny() {

@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <boost/foreach.hpp>
+#include <QDir>
 
 #include "main.h"
 #include "trackball.h"
@@ -49,6 +50,15 @@ static size_t step = 0;
 static vector<SFMColor> pointColorsNow;
 static vector<SFMColor> cameraColorsNow;
 
+/**
+ * thumbnails
+ */
+static vector<string> thumbnailNames;
+static GLuint queryTexID = 0;
+static vector<GLuint> nnTexIDs;
+static int thumbnail_width = 175, thumbnail_height = 117;
+static int thumbnail_space = 28;
+
 /* ************************************************************************* */
 void load3D() {
 	ifstream is(filename.c_str());
@@ -83,6 +93,15 @@ void load3D() {
 	is.close();
 	cout << "loaded " << structure.size() << " points and " << cameras.size() << " cameras" << endl;
 	cout.flush();
+
+	QDir dir(QString("/Users/nikai/borg/visibility/video/images"));
+	QStringList nameFilters;
+	nameFilters << "*.png";
+	QStringList thumbnailNames_ = dir.entryList(nameFilters, QDir::NoFilter, QDir::Name);
+	BOOST_FOREACH (const QString& name, thumbnailNames_) {
+		thumbnailNames.push_back((dir.absolutePath() + "/" + name).toStdString());
+	}
+	cout << "loaded " << thumbnailNames.size() << " thumbnails" << endl;
 }
 
 /* ************************************************************************* */
@@ -114,6 +133,7 @@ void loadVisibility() {
 	is.close();
 	cout << "loaded " << visibileFeatures.size() << " frames of visibilities" << endl;
 	cout.flush();
+
 }
 
 /* ************************************************************************* */
@@ -132,14 +152,35 @@ void nextVisibility() {
 	if (step >=0 && step < visibileFeatures.size()) {
 		BOOST_FOREACH(const int& i, visibileFeatures.find(step)->second) {
 			pointColorsNow[i].r     = 1.0;
-			pointColorsNow[i].g     = 0.75;
+			pointColorsNow[i].g     = 0.55;
 			pointColorsNow[i].b     = 0.15;
 			pointColorsNow[i].alpha = 1.0;
 		}
 	}
 
+	// load thumbnails
+	if (queryTexID!=0) glDeleteTextures(1, &queryTexID);
+	BOOST_FOREACH(const GLuint& id, nnTexIDs)
+		glDeleteTextures(1, &id);
+	nnTexIDs.clear();
+
+	QImage image(QString::fromStdString(thumbnailNames[step]));
+	if (image.width() != 128 || image.height() != 128) image = image.scaled(QSize(128, 128));
+	queryTexID = loadThumbnailTexture(image);
+
+	if (step >=0 && step < neighborCameras.size()) {
+		vector<int> nns = neighborCameras.find(step)->second;
+		size_t numNN = nns.size() > 4 ? 4 : nns.size();
+		for (size_t i=0; i<numNN; i++) {
+			QImage image(QString::fromStdString(thumbnailNames[nns[i]]));
+			nnTexIDs.push_back(loadThumbnailTexture(image));
+		}
+	}
+
+	// update opengla canvas
 	canvas->updateGL();
 
+	// quit if all the data has been processed
 	if (step == visibileFeatures.size())
 		app->quit();
 
@@ -212,5 +253,12 @@ void sfmviewer::draw() {
 	drawStructure(structure, pointColorsNow);
 	drawCameras(cameras, cameraColorsNow, false);
 //	drawCameraCircle();
+
+	int left = 17;
+	drawThumbnail(queryTexID, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(1.,0.,0.,1.));
+	BOOST_FOREACH(const GLuint& id, nnTexIDs) {
+		left += thumbnail_width + thumbnail_space;
+		drawThumbnail(id, canvas->size(), QRectF(left, 10., thumbnail_width, thumbnail_height), SFMColor(0.,1.,0.,1.));
+	}
 }
 
