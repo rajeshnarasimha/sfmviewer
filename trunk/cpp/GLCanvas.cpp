@@ -89,52 +89,12 @@ namespace sfmviewer {
 
 		// speedups
 		glEnable(GL_DITHER);
-		glShadeModel(GL_FLAT);
 		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 		glHint(GL_POLYGON_SMOOTH_HINT, GL_FASTEST);
+		glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+		glEnable( GL_POINT_SMOOTH);
 
 		glClearColor(SFM_BACKGROUND_COLOR);
-
-//		GLfloat light_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
-//		GLfloat light_diffuse[] = { 0.7, 0.7, 0.7, 1.0 };
-//		GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-//		GLfloat light_position[] = { -150.0, 500.0, -300.0, 0.0 };
-//
-//		glEnable(GL_LIGHTING);
-//		glEnable(GL_LIGHT0);
-//		glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-//		glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-//		glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-//		glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	}
-
-	/* ************************************************************************* */
-	void print2DArray(const float m[4][4], const string& str) {
-		cout << str << endl;
-		cout << m[0][0] << " " << m[0][1] << " " << m[0][2] << " " << m[0][3] << endl;
-		cout << m[1][0] << " " << m[1][1] << " " << m[1][2] << " " << m[1][3] << endl;
-		cout << m[2][0] << " " << m[2][1] << " " << m[2][2] << " " << m[2][3] << endl;
-		cout << m[3][0] << " " << m[3][1] << " " << m[3][2] << " " << m[3][3] << endl;
-	}
-
-	void print1DArray(const float m[16], const string& str) {
-		cout << str << endl;
-		cout << m[0] << " " << m[4] << " " << m[8]  << " " << m[12] << endl;
-		cout << m[1] << " " << m[5] << " " << m[9]  << " " << m[13] << endl;
-		cout << m[2] << " " << m[6] << " " << m[10] << " " << m[14] << endl;
-		cout << m[3] << " " << m[7] << " " << m[11] << " " << m[15] << endl;
-	}
-
-	void printModelViewMatrix() {
-		float m[16];
-		glGetFloatv(GL_MODELVIEW, m);
-		print1DArray(m, "ModelView");
-	}
-
-	void printProjectionatrix() {
-		float m[16];
-		glGetFloatv(GL_PROJECTION, m);
-		print1DArray(m, "Projection");
 	}
 
 	/* ************************************************************************* */
@@ -165,7 +125,7 @@ namespace sfmviewer {
 		// the calibration matrix only depends on the window aspect ratio
 		glMatrixMode( GL_PROJECTION);
 		glLoadIdentity();
-		gluPerspective(60.0, (GLfloat) width / height, 0.00001, 1000.0); // the 3rd parameter
+		gluPerspective(60.0, (GLfloat) width / height, 0.01, 5000.0); // the 3rd parameter
 	}
 
 	/* ************************************************************************* */
@@ -237,7 +197,6 @@ namespace sfmviewer {
 	void GLCanvas::contextMenuEvent(QContextMenuEvent *event) {
 		if (event->modifiers() & Qt::MetaModifier) { // it requires control click
 			QMenu menu(this);
-			cout << "contextMenuEvent" << endl;
 			menu.addAction(changeTopViewAct);
 			menu.exec(event->globalPos());
 		}

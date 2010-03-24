@@ -17,6 +17,7 @@
 
 #include "SFMViewer.h"
 #include "render.h"
+#include "common.h"
 
 namespace sfmviewer {
 
