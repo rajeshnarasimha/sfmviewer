@@ -106,18 +106,14 @@ namespace sfmviewer {
 		GLfloat prj[4][4];
 		build_tran_matrix(viewPort_, prj);
 		glMultTransposeMatrixf((GLfloat*)m_convert); // second, convert the camera coordinates to the opengl camera coordinates
-//		printModelViewMatrix();
 		glMultTransposeMatrixf((GLfloat*)prj);       // first, project the points in the world coordinates to the camera coorrdinates
-//		print2DArray(prj, "trackball");
-//		printModelViewMatrix();
 
 		// background
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		fun_draw_();
 
-//		glFlush();
-		swapBuffers();
+		glFlush();
 	}
 
 	/* ************************************************************************* */

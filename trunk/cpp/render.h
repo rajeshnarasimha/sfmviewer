@@ -11,6 +11,8 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #include <gtsam/SimpleCamera.h>
+#include <QRectF>
+#include <QImage>
 
 namespace sfmviewer {
 
@@ -52,8 +54,14 @@ namespace sfmviewer {
 	CameraVertices calcCameraVertices(const gtsam::SimpleCamera& camera, const int img_w = 800, const int img_h = 800,
 			const float scale = 1.0);
 
+	// load a texture to opengl
+	GLuint loadThumbnailTexture(const QImage& image);;
+
+	// draw a texture specified by {texID} in the rectangle {rect}
+	void drawThumbnail(const GLuint texID, const QSize& size, const QRectF& rect, const SFMColor& color);
+
 	// draw the bunny example
-		void drawBunny();
+	void drawBunny();
 
 	// draw a circle of cameras;
 	void drawCameraCircle();
