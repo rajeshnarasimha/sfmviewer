@@ -144,21 +144,32 @@ namespace sfmviewer {
   				                -(2.0 * event->y()   - ws.height())	/ ws.height());
 			add_quats(spin_quat, viewPort_.m_quat, viewPort_.m_quat);
 		}
+
 		// right click or command + left click to translate
 		else if ((event->buttons() & Qt::RightButton) ||
 				(event->buttons() & Qt::LeftButton) && (event->modifiers() & Qt::ControlModifier)) {
 			float dx = event->x() - lastPos_.x();
 			float dy = lastPos_.y() - event->y();
-			viewPort_.m_shift[0] += dx * m_shift_step * 100;
-			viewPort_.m_shift[1] += dy * m_shift_step * 100;
+			float r[3][3];
+			build_rotmatrix(r, viewPort_.m_quat);
+			viewPort_.m_shift[0] += (r[0][0] * dx + r[0][1] * dy) * m_shift_step * 100;
+			viewPort_.m_shift[1] += (r[1][0] * dx + r[1][1] * dy) * m_shift_step * 100;
+			viewPort_.m_shift[2] += (r[2][0] * dx + r[2][1] * dy) * m_shift_step * 100;
 		}
+
 		// middle click to zoom in and zoom out
 		else if ((event->buttons() & Qt::MidButton) ||
 				(event->buttons() & Qt::LeftButton) && (event->modifiers() & Qt::AltModifier)) {
 			float dx = event->x() - lastPos_.x();
 			float dy = lastPos_.y() - event->y();
-			if (fabs(dy) > fabs(dx))
-				viewPort_.m_shift[2] += (dy / fabs(dy)) * m_shift_step * 100;
+			if (fabs(dy) > fabs(dx)) {
+				float r[3][3];
+				build_rotmatrix(r, viewPort_.m_quat);
+				float delta = dy / fabs(dy);
+				viewPort_.m_shift[0] += r[0][2] * delta * m_shift_step * 100;
+				viewPort_.m_shift[1] += r[1][2] * delta * m_shift_step * 100;
+				viewPort_.m_shift[2] += r[2][2] * delta * m_shift_step * 100;
+			}
 		}
 		lastPos_ = event->pos();
 		updateGL();
