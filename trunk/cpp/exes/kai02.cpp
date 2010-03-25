@@ -195,7 +195,7 @@ void nextVisibility() {
 }
 
 /* ************************************************************************* */
-ViewPort computeOrbitCamera(const int segment) {
+QuatPose computeOrbitCamera(const int segment) {
 	float angle = -M_PI_2 + (float)segment / orbit_segments * M_PI * 2;
 
 	// compute the rotation of the current point on the orbit, refer to quaternions.lyx
@@ -212,14 +212,14 @@ ViewPort computeOrbitCamera(const int segment) {
 	float z = sin(angle) * orbit_radius + orbit_center_z;
 	float trans[3] = {x, orbit_height, z};
 
-	return ViewPort(trans[0], trans[1], trans[2], q[0], q[1], q[2], q[3]);
+	return QuatPose(trans[0], trans[1], trans[2], q[0], q[1], q[2], q[3]);
 }
 
 // move the camera around an orbit
 void moveCamera() {
 	// the current position on the orbit
 	int segment = orbit_step % orbit_segments;
-	canvas->setViewPort(computeOrbitCamera(segment));
+	canvas->setGLPose(computeOrbitCamera(segment));
 	canvas->updateGL();
 	orbit_step ++;
 }
@@ -237,12 +237,12 @@ void sfmviewer::setup()
 	// load the visibility file
 	loadVisibility();
 
-	// set the default view port for St. Peter
-//	canvas->setViewPort(ViewPort(119., -257., -100., -0.341, -0.223, -0.081, 0.909));
-	canvas->setViewPort(computeOrbitCamera(orbit_step));
+	// set the default camera pose for St. Peter
+//	canvas->setGLPose(QuatPose(119., -257., -100., -0.341, -0.223, -0.081, 0.909));
+	canvas->setGLPose(computeOrbitCamera(orbit_step));
 
-	// set the top view port
-	canvas->setTopViewPort(ViewPort(0., -500., 200., -1./sqrt(2.), 0., 0., 1./sqrt(2.)));
+	// set the top camera pose
+	canvas->setGLPoseTop(QuatPose(0., -500., 200., -1./sqrt(2.), 0., 0., 1./sqrt(2.)));
 
 	// set up the timer for pluging in the visibility data
 	pointColorsNow = pointColors;
