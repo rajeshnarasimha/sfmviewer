@@ -325,12 +325,13 @@ build_tran_matrix (const ViewPort& viewPort, float m[4][4])
 		float r[3][3];
     build_rotmatrix(r, viewPort.m_quat);
     
+    // make R'
     m[0][0] = r[0][0];     m[0][1] = r[1][0];   m[0][2] = r[2][0];
     m[1][0] = r[0][1];     m[1][1] = r[1][1];   m[1][2] = r[2][1];
     m[2][0] = r[0][2];     m[2][1] = r[1][2];   m[2][2] = r[2][2];
     m[3][0] = 0.;          m[3][1] = 0.;        m[3][2] = 0.;         m[3][3] = 1.;
 
-    // compute -Rt and make [R -Rt; 0 1]
+    // compute -R't and make [R' -R't; 0 1]
     m[0][3] = -m[0][0] * viewPort.x() - m[0][1] * viewPort.y() - m[0][2] * viewPort.z();
     m[1][3] = -m[1][0] * viewPort.x() - m[1][1] * viewPort.y() - m[1][2] * viewPort.z();
     m[2][3] = -m[2][0] * viewPort.x() - m[2][1] * viewPort.y() - m[2][2] * viewPort.z();
