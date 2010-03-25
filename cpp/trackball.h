@@ -44,12 +44,12 @@
 
 #include <string>
 
-// Kai: the data structure for the view port
-struct ViewPort {
+// Kai: the data structure for the poses with quaternion rotations
+struct QuatPose {
 	float m_shift[3];  // translation
 	float m_quat[4];   // orientation in quaternion format
-	ViewPort() {}
-	ViewPort(float x, float y, float z, float q1, float q2, float q3, float q4) {
+	QuatPose() {}
+	QuatPose(float x, float y, float z, float q1, float q2, float q3, float q4) {
 		m_shift[0] = x; m_shift[1] = y; m_shift[2] = z;
 		m_quat[0] = q1; m_quat[1] = q2; m_quat[2] = q3; m_quat[3] = q4;
 	}
@@ -88,7 +88,7 @@ build_rotmatrix(float m[3][3], const float q[4]);
 
 // Kai: combine translation
 void
-build_tran_matrix (const ViewPort& viewPort, float m[4][4]);
+build_tran_matrix (const QuatPose& viewPort, float m[4][4]);
 
 /*
  * This function computes a quaternion based on an axis (defined by

@@ -37,11 +37,11 @@ namespace sfmviewer {
 	/* ************************************************************************* */
 	GLCanvas::GLCanvas(QWidget *parent) :
 		QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
-		// initial view port
-		viewPort_.m_shift[0] = 0.0f;
-		viewPort_.m_shift[1] = 0.0f;
-		viewPort_.m_shift[2] = -5.0f;
-		trackball(viewPort_.m_quat, 0.0f, 0.0f, 0.0f, 0.0f);
+		// initial camera pose
+		glPose_.m_shift[0] = 0.0f;
+		glPose_.m_shift[1] = 0.0f;
+		glPose_.m_shift[2] = -5.0f;
+		trackball(glPose_.m_quat, 0.0f, 0.0f, 0.0f, 0.0f);
 
 		// create various actions
 		createActions();
@@ -50,8 +50,8 @@ namespace sfmviewer {
 		timerRefresh_ = new QTimer(this);
 		connect(timerRefresh_, SIGNAL(timeout()), this, SLOT(updateGL()));
 
-		// set the view port of the top view
-		viewPortTop_ = ViewPort(0., -500., 0., -1./sqrt(2.), 0., 0., 1./sqrt(2.));
+		// set the camera pose of the top view
+		glPoseTop_ = QuatPose(0., -500., 0., -1./sqrt(2.), 0., 0., 1./sqrt(2.));
 	}
 
 	/* ************************************************************************* */
@@ -104,7 +104,7 @@ namespace sfmviewer {
 		glMatrixMode( GL_MODELVIEW);
 		glLoadIdentity();
 		GLfloat prj[4][4];
-		build_tran_matrix(viewPort_, prj);
+		build_tran_matrix(glPose_, prj);
 		glMultTransposeMatrixf((GLfloat*)m_convert); // second, convert the camera coordinates to the opengl camera coordinates
 		glMultTransposeMatrixf((GLfloat*)prj);       // first, project the points in the world coordinates to the camera coorrdinates
 
@@ -142,7 +142,7 @@ namespace sfmviewer {
 					                -(2.0 * lastPos_.y() - ws.height()) / ws.height(),
 					                 (2.0 * event->x()   - ws.width())  / ws.width(),
   				                -(2.0 * event->y()   - ws.height())	/ ws.height());
-			add_quats(spin_quat, viewPort_.m_quat, viewPort_.m_quat);
+			add_quats(spin_quat, glPose_.m_quat, glPose_.m_quat);
 		}
 
 		// right click or command + left click to translate
@@ -151,10 +151,10 @@ namespace sfmviewer {
 			float dx = event->x() - lastPos_.x();
 			float dy = lastPos_.y() - event->y();
 			float r[3][3];
-			build_rotmatrix(r, viewPort_.m_quat);
-			viewPort_.m_shift[0] += (r[0][0] * dx + r[0][1] * dy) * m_shift_step * 100;
-			viewPort_.m_shift[1] += (r[1][0] * dx + r[1][1] * dy) * m_shift_step * 100;
-			viewPort_.m_shift[2] += (r[2][0] * dx + r[2][1] * dy) * m_shift_step * 100;
+			build_rotmatrix(r, glPose_.m_quat);
+			glPose_.m_shift[0] += (r[0][0] * dx + r[0][1] * dy) * m_shift_step * 100;
+			glPose_.m_shift[1] += (r[1][0] * dx + r[1][1] * dy) * m_shift_step * 100;
+			glPose_.m_shift[2] += (r[2][0] * dx + r[2][1] * dy) * m_shift_step * 100;
 		}
 
 		// middle click to zoom in and zoom out
@@ -164,11 +164,11 @@ namespace sfmviewer {
 			float dy = lastPos_.y() - event->y();
 			if (fabs(dy) > fabs(dx)) {
 				float r[3][3];
-				build_rotmatrix(r, viewPort_.m_quat);
+				build_rotmatrix(r, glPose_.m_quat);
 				float delta = dy / fabs(dy);
-				viewPort_.m_shift[0] += r[0][2] * delta * m_shift_step * 100;
-				viewPort_.m_shift[1] += r[1][2] * delta * m_shift_step * 100;
-				viewPort_.m_shift[2] += r[2][2] * delta * m_shift_step * 100;
+				glPose_.m_shift[0] += r[0][2] * delta * m_shift_step * 100;
+				glPose_.m_shift[1] += r[1][2] * delta * m_shift_step * 100;
+				glPose_.m_shift[2] += r[2][2] * delta * m_shift_step * 100;
 			}
 		}
 		lastPos_ = event->pos();
@@ -177,10 +177,10 @@ namespace sfmviewer {
 		// update status bar
 		if (parentWidget()) {
 			stringstream portMsg;
-			portMsg << viewPort_.m_shift[0] << ", " << viewPort_.m_shift[1] << ", "
-							<< viewPort_.m_shift[2] << ", " << viewPort_.m_quat[0] << ", "
-							<< viewPort_.m_quat[1] << ", " << viewPort_.m_quat[2] << ", "
-							<< viewPort_.m_quat[3] << endl;
+			portMsg << glPose_.m_shift[0] << ", " << glPose_.m_shift[1] << ", "
+							<< glPose_.m_shift[2] << ", " << glPose_.m_quat[0] << ", "
+							<< glPose_.m_quat[1] << ", " << glPose_.m_quat[2] << ", "
+							<< glPose_.m_quat[3] << endl;
 			// TODO: check whether the parent is actually a QMainWindow
 			((QMainWindow*) parentWidget())->statusBar()->showMessage(
 					QString::fromStdString(portMsg.str()));
@@ -196,7 +196,7 @@ namespace sfmviewer {
 
 	/* ************************************************************************* */
 	void GLCanvas::changeTopView() {
-		viewPort_ = viewPortTop_;
+		glPose_ = glPoseTop_;
 		updateGL();
 	}
 

@@ -43,10 +43,10 @@ namespace sfmviewer {
 		// set up users' callback functions
 		void setDrawFunc(const Callback& fun_draw) { fun_draw_ = fun_draw; }
 
-		// set the viewport of the opengl camera
-		void setViewPort(const ViewPort& port) { viewPort_ = port; }
+		// set the current opengl camera pose
+		void setGLPose(const QuatPose& pose) { glPose_ = pose; }
 
-		void setTopViewPort(const ViewPort& port) { viewPortTop_ = port; }
+		void setGLPoseTop(const QuatPose& pose) { glPoseTop_ = pose; }
 
 		// set the refresh interval
 		void setRefreshInterval(int msec);
@@ -91,11 +91,11 @@ namespace sfmviewer {
 		int hintWidth_;
 		int hintHeight_;
 
-		// the current viewport (a projection matrix represented as quaternion and -R't)
-		ViewPort viewPort_;
+		// the pose of the current opengl camera
+		QuatPose glPose_;
 
-		// the canonical viewports
-		ViewPort viewPortTop_;
+		// the pose when the opengl camera is at top
+		QuatPose glPoseTop_;
 
 		// the pointers of callback functions
 		Callback fun_draw_;

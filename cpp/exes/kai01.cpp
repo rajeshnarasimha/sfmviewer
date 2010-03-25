@@ -58,12 +58,12 @@ void sfmviewer::setup()
 {
 	load3d();
 
-	// set the default view port for St. Peter
-	canvas->setViewPort(ViewPort(119., -257., -100., -0.341, -0.223, -0.081, 0.909));
-	//canvas->setViewPort(ViewPort(0., 0., 0., 0., 0., 0., 1.));
+	// set the default camera pose for St. Peter
+	canvas->setGLPose(QuatPose(119., -257., -100., -0.341, -0.223, -0.081, 0.909));
+	//canvas->setGLPose(QuatPose(0., 0., 0., 0., 0., 0., 1.));
 
-	// set the top view port
-	canvas->setTopViewPort(ViewPort(0., -500., 200., -1./sqrt(2.), 0., 0., 1./sqrt(2.)));
+	// set the top view camera pose
+	canvas->setGLPoseTop(QuatPose(0., -500., 200., -1./sqrt(2.), 0., 0., 1./sqrt(2.)));
 }
 
 void sfmviewer::draw() {
