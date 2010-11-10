@@ -6,15 +6,14 @@
  *  Description: the rendering functions for different elements
  */
 
+#include <stdexcept>
 #include <boost/foreach.hpp>
-#include <gtsam/base/Matrix.h>
 
 #include "render.h"
 #include "trackball.h"
 #include "bunny.h"
 
 using namespace std;
-using namespace gtsam;
 
 #define SFM_POINT_COLOR          1.0f, 1.0f, 1.0f, 1.0f
 #define SFM_CAMERA_COLOR  240.f/255.f, 140.0f/255.f, 24.0f/255.f,  1.0f
@@ -50,7 +49,7 @@ namespace sfmviewer {
 			// set colors if available
 			if (!pointColors.empty()) {
 				if (pointColors.size() != structure.size())
-					throw runtime_error("DrawStructure: no. of colors != no. of points");
+					throw std::runtime_error("DrawStructure: no. of colors != no. of points");
 				glEnableClientState( GL_COLOR_ARRAY);
 				glColorPointer(4, GL_FLOAT, 0, (GLvoid*) &pointColors[0]);
 			} else

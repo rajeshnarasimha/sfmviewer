@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.6)
-include("../buildtools/gt.cmake")
 project(sfmviewer CXX C)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
