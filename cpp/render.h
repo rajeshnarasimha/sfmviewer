@@ -10,7 +10,7 @@
 
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
-#include <gtsam/SimpleCamera.h>
+//#include <gtsam/geometry/SimpleCamera.h>
 #include <QRectF>
 #include <QImage>
 
@@ -45,13 +45,16 @@ namespace sfmviewer {
 			const std::vector<SFMColor>& cameraColors = std::vector<SFMColor>(), const bool fill = true);
 
 	// draw a rgb cameras
-	void drawRGBCamera(const gtsam::Pose3& pose, const GLfloat linewidth = 1.0, const float scale = 1.0);
+	template<class Pose3>
+	void drawRGBCamera(const Pose3& pose, const GLfloat linewidth = 1.0, const float scale = 1.0);
 
 	// draw rgb cameras
-	void drawRGBCameras(const std::vector<gtsam::Pose3>& poses, const GLfloat linewidth = 1.0, const float scale = 1.0);
+	template<class Pose3>
+	void drawRGBCameras(const std::vector<Pose3>& poses, const GLfloat linewidth = 1.0, const float scale = 1.0);
 
 	// backproject four corners of the image to the system coordinate
-	CameraVertices calcCameraVertices(const gtsam::SimpleCamera& camera, const int img_w = 800, const int img_h = 800,
+	template<class Camera>
+	CameraVertices calcCameraVertices(const Camera& camera, const int img_w = 800, const int img_h = 800,
 			const float scale = 1.0);
 
 	// load a texture to opengl
@@ -64,6 +67,7 @@ namespace sfmviewer {
 	void drawBunny();
 
 	// draw a circle of cameras;
+	template<class Pose3, class Calibration>
 	void drawCameraCircle();
 
 } // namespace sfmviewer

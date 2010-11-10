@@ -9,7 +9,6 @@
 #pragma once
 
 #include <QMainWindow>
-#include <gtsam/Point3.h>
 #include "GLCanvas.h"
 
 QT_BEGIN_NAMESPACE
