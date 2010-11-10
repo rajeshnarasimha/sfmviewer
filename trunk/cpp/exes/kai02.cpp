@@ -9,9 +9,11 @@
 #include <fstream>
 #include <boost/foreach.hpp>
 #include <QDir>
+#include <gtsam/geometry/SimpleCamera.h>
 
 #include "main.h"
 #include "trackball.h"
+#include "render-inl.h"
 
 using namespace std;
 using namespace gtsam;
@@ -86,7 +88,7 @@ void load3D() {
 				 >> r13 >> r23 >> r33;
 			Pose3 pose(Rot3(r11, r12, r13, r21, r22, r23, r31, r32, r33), Point3(x, y, z));
 			SimpleCamera camera(Cal3_S2(120., 1600, 1600), pose);
-			cameras.push_back(calcCameraVertices(camera, 1600, 1600, 7.0));
+			cameras.push_back(calcCameraVertices<SimpleCamera, Point2, Point3>(camera, 1600, 1600, 7.0));
 			cameraColors.push_back(SFMColor(camera_color.r, camera_color.g, camera_color.b, 0.2));
 		}
 

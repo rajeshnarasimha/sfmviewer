@@ -6,6 +6,7 @@
  *  Description: the base class for the viewer window
  */
 
+#include <iostream>
 #include <QtCore> // for layout
 #include <QtGui>
 

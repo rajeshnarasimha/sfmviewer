@@ -6,7 +6,9 @@
  *  Description: the most simple viewer
  */
 #include <fstream>
+#include <gtsam/geometry/SimpleCamera.h>
 
+#include "render-inl.h"
 #include "main.h"
 
 using namespace std;
@@ -44,7 +46,7 @@ void load3d() {
 			>> r31 >> r32 >> r33;
 			Pose3 pose(Rot3(r11, r12, r13, r21, r22, r23, r31, r32, r33), Point3(x, y, z));
 			SimpleCamera camera(Cal3_S2(120., 1600, 1600), pose);
-			cameras.push_back(calcCameraVertices(camera, 1600, 1600, 7.));
+			cameras.push_back(calcCameraVertices<SimpleCamera, Point2, Point3>(camera, 1600, 1600, 7.));
 		}
 
 		is.ignore(LINESIZE, '\n');
