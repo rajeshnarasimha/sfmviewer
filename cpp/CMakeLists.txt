@@ -16,6 +16,7 @@ find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui QtOpenGL)
 include(${QT_USE_FILE})
 link_libraries(${QT_LIBRARIES})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
 qt4_automoc(${srcs})
 
 # link with other 3rd party libraries
@@ -37,7 +38,7 @@ install(FILES ${headers} DESTINATION "include/${PROJECT_NAME}")
 
 # gtsam related
 
-if(false)
+if(0)
 
 include_directories("$ENV{HOME}/borg/gtsam")
 link_libraries("-L$ENV{HOME}/borg/gtsam/build/gtsam/.libs -lgtsam")

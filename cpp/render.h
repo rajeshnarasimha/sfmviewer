@@ -36,8 +36,13 @@ namespace sfmviewer {
 		Vertex v[5];
 	};
 
-	// draw the 3D structure
+	// draw the 3D structure using sfmviewer's own data structure
 	void drawStructure(const std::vector<Vertex>& structure,
+			const std::vector<SFMColor>& pointColors = std::vector<SFMColor>());
+
+	// draw the 3D structure using external data structure, such as gtsam::LieValue::const_iterator
+	template <class KeyPointIterator>
+	void drawStructure(KeyPointIterator keyPointBegin, KeyPointIterator keyPointEnd, const size_t numPoints,
 			const std::vector<SFMColor>& pointColors = std::vector<SFMColor>());
 
 	// draw cameras
@@ -56,6 +61,10 @@ namespace sfmviewer {
 	template<class Camera>
 	CameraVertices calcCameraVertices(const Camera& camera, const int img_w = 800, const int img_h = 800,
 			const float scale = 1.0);
+
+	template<class KeyCameraIterator, class Camera, class Point2, class Point3>
+	std::vector<CameraVertices> calcCameraVertices(KeyCameraIterator keyCameraBegin, KeyCameraIterator keyCamera, const size_t numCameras,
+			const int img_w = 800, const int img_h = 800,	const float scale = 1.0);
 
 	// load a texture to opengl
 	GLuint loadThumbnailTexture(const QImage& image);;
