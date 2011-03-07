@@ -38,7 +38,7 @@ install(FILES ${headers} DESTINATION "include/${PROJECT_NAME}")
 
 # gtsam related
 
-if(0)
+if(1)
 
 include_directories("$ENV{HOME}/borg/gtsam")
 link_libraries("-L$ENV{HOME}/borg/gtsam/build/gtsam/.libs -lgtsam")

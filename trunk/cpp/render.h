@@ -45,9 +45,16 @@ namespace sfmviewer {
 	void drawStructure(KeyPointIterator keyPointBegin, KeyPointIterator keyPointEnd, const size_t numPoints,
 			const std::vector<SFMColor>& pointColors = std::vector<SFMColor>());
 
-	// draw cameras
+	template <class KeyPointIterator>
+	void drawStructure(KeyPointIterator keyPointBegin, KeyPointIterator keyPointEnd, const size_t numPoints,
+			const SFMColor& color);
+
+	// draw cameras with flexible colors
 	void drawCameras(const std::vector<CameraVertices>& cameras,
 			const std::vector<SFMColor>& cameraColors = std::vector<SFMColor>(), const bool fill = true);
+
+	// draw cameras with a fixed color
+	void drawCameras(const std::vector<CameraVertices>& cameras, const SFMColor& color, const bool fill = true);
 
 	// draw a rgb cameras
 	template<class Pose3>

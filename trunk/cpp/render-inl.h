@@ -31,6 +31,20 @@ namespace sfmviewer {
 	}
 
 	/* ************************************************************************* */
+	template <class KeyPointIterator>
+	void drawStructure(KeyPointIterator keyPointBegin, KeyPointIterator keyPointEnd, const size_t numPoints,
+			const SFMColor& color) {
+		vector<Vertex> structure;
+		structure.reserve(numPoints);
+		std::vector<SFMColor> pointColors(numPoints, color);
+		while (keyPointBegin != keyPointEnd) {
+			structure.push_back(Vertex(keyPointBegin->second.x(), keyPointBegin->second.y(), keyPointBegin->second.z()));
+			keyPointBegin++;
+		}
+		drawStructure(structure, pointColors);
+	}
+
+	/* ************************************************************************* */
 	template<class Pose3>
 	void drawRGBCamera(const Pose3& pose, const GLfloat linewidth, const float scale) {
 		Matrix r = pose.rotation().matrix();
@@ -84,7 +98,7 @@ namespace sfmviewer {
 		vector<CameraVertices> vertices_all;
 		vertices_all.reserve(numCameras);
 		while(keyCameraBegin != keyCameraEnd)
-			vertices_all.push_back(calcCameraVertices<Camera, Point2, Point3>((keyCameraBegin++)->second, img_w, img_w, scale));
+			vertices_all.push_back(calcCameraVertices<Camera, Point2, Point3>((keyCameraBegin++)->second, img_w, img_h, scale));
 		return vertices_all;
 	}
 
