@@ -15,7 +15,7 @@
 
 #include "GLCanvas.h"
 
-#define SFM_BACKGROUND_COLOR     0.0f, 0.0f, 0.0f, 1.0f
+#define SFM_BACKGROUND_COLOR     1.0f, 1.0f, 1.0f, 1.0f
 
 using namespace std;
 
@@ -133,6 +133,8 @@ namespace sfmviewer {
 	void GLCanvas::mouseMoveEvent(QMouseEvent *event) {
 		float m_shift_step = 0.01f;
 
+		float scale = 10;
+
 		// left click to rotate
 		if ((event->buttons() & Qt::LeftButton) && !(event->modifiers() & Qt::ControlModifier)
 				&& !(event->modifiers() & Qt::AltModifier)) {
@@ -152,9 +154,9 @@ namespace sfmviewer {
 			float dy = lastPos_.y() - event->y();
 			float r[3][3];
 			build_rotmatrix(r, glPose_.m_quat);
-			glPose_.m_shift[0] += (r[0][0] * dx + r[0][1] * dy) * m_shift_step * 100;
-			glPose_.m_shift[1] += (r[1][0] * dx + r[1][1] * dy) * m_shift_step * 100;
-			glPose_.m_shift[2] += (r[2][0] * dx + r[2][1] * dy) * m_shift_step * 100;
+			glPose_.m_shift[0] += (r[0][0] * dx + r[0][1] * dy) * m_shift_step * scale;
+			glPose_.m_shift[1] += (r[1][0] * dx + r[1][1] * dy) * m_shift_step * scale;
+			glPose_.m_shift[2] += (r[2][0] * dx + r[2][1] * dy) * m_shift_step * scale;
 		}
 
 		// middle click to zoom in and zoom out
@@ -166,9 +168,9 @@ namespace sfmviewer {
 				float r[3][3];
 				build_rotmatrix(r, glPose_.m_quat);
 				float delta = dy / fabs(dy);
-				glPose_.m_shift[0] += r[0][2] * delta * m_shift_step * 100;
-				glPose_.m_shift[1] += r[1][2] * delta * m_shift_step * 100;
-				glPose_.m_shift[2] += r[2][2] * delta * m_shift_step * 100;
+				glPose_.m_shift[0] += r[0][2] * delta * m_shift_step * scale;
+				glPose_.m_shift[1] += r[1][2] * delta * m_shift_step * scale;
+				glPose_.m_shift[2] += r[2][2] * delta * m_shift_step * scale;
 			}
 		}
 		lastPos_ = event->pos();

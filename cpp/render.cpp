@@ -30,6 +30,7 @@ using namespace std;
 	glDisable(GL_BLEND);
 
 namespace sfmviewer {
+
 	/* ************************************************************************* */
 	void drawStructure(const vector<Vertex>& structure,
 			const vector<SFMColor>& pointColors) {
@@ -107,6 +108,14 @@ namespace sfmviewer {
 				drawCamera(cameras[i].v, default_camera_color, linewidth, fill);
 			else
 				drawCamera(cameras[i].v, cameraColors[i], linewidth, fill);
+		}
+	}
+
+	/* ************************************************************************* */
+	void drawCameras(const vector<CameraVertices>& cameras, const SFMColor& color, const bool fill) {
+		GLfloat linewidth = 1;
+		for (size_t i=0; i<cameras.size(); i++) {
+				drawCamera(cameras[i].v, color, linewidth, fill);
 		}
 	}
 

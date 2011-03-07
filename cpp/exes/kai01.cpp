@@ -26,6 +26,7 @@ void load3d() {
 	// load the files
 	ifstream is(filename.c_str());
 	string tag;
+	bool firstCamera = true;
 	while (is) {
 		is >> tag;
 
@@ -46,11 +47,14 @@ void load3d() {
 			>> r31 >> r32 >> r33;
 			Pose3 pose(Rot3(r11, r12, r13, r21, r22, r23, r31, r32, r33), Point3(x, y, z));
 			SimpleCamera camera(Cal3_S2(120., 1600, 1600), pose);
+
+			if (firstCamera) {	camera.calibration().print("calibration"); firstCamera = false; }
 			cameras.push_back(calcCameraVertices<SimpleCamera, Point2, Point3>(camera, 1600, 1600, 7.));
 		}
 
 		is.ignore(LINESIZE, '\n');
 	}
+
 	is.close();
 	cout << "loaded " << structure.size() << " points and " << cameras.size() << " cameras" << endl;
 	cout.flush();
