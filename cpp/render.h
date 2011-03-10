@@ -10,7 +10,6 @@
 
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
-//#include <gtsam/geometry/SimpleCamera.h>
 #include <QRectF>
 #include <QImage>
 

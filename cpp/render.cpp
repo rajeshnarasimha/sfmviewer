@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#define SFM_POINT_COLOR          1.0f, 1.0f, 1.0f, 1.0f
+#define SFM_POINT_COLOR          0.0f, 0.0f, 0.0f, 1.0f
 #define SFM_CAMERA_COLOR  240.f/255.f, 140.0f/255.f, 24.0f/255.f,  1.0f
 
 #define DRAWONERECT(X1,Y1,Z1,X2,Y2,Z2,X3,Y3,Z3,X4,Y4,Z4) \

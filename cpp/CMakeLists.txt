@@ -53,4 +53,8 @@ add_executable(kai02 exes/kai02.cpp)
 add_custom_target(kai02.run kai02)
 target_link_libraries(kai02 sfmviewer-shared)
 
+add_executable(kai_bunny exes/kai_bunny.cpp)
+add_custom_target(kai_bunny.run kai_bunny)
+target_link_libraries(kai_bunny sfmviewer-shared)
+
 endif()
