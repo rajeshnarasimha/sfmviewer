@@ -120,6 +120,10 @@ namespace sfmviewer {
 	void GLCanvas::resizeGL(int width, int height) {
 		// the calibration matrix only depends on the window aspect ratio
 		glMatrixMode( GL_PROJECTION);
+
+    // set the viewport size
+    glViewport(0, 0, width, height);
+
 		glLoadIdentity();
 		gluPerspective(60.0, (GLfloat) width / height, 0.01, 5000.0); // the 3rd parameter
 	}
